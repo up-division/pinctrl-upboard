@@ -1,0 +1,10 @@
+pinctrl-upboard (0.2.1) stretch; urgency=medium
+
+  * Beta Release.
+
+ -- Gary Wang <garywang@aaeon.com.tw>  Tue, 31 Aug 2022 22:29:12 +0100
+pinctrl-upboard (0.1.0) stretch; urgency=medium
+
+  * Alpha Release.
+
+ -- Gary Wang <garywang@aaeon.com.tw>  Tue, 14 Jul 2022 02:20:58 +0100

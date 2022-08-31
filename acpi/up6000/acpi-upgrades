@@ -1,0 +1,84 @@
+#!/bin/sh
+# acpi-upgrades initramfs-tools hook script
+# Copyright (C) 2017 Dan O'Donovan <dan@emutex.com>
+# Released under the GPL v2 or later license
+#
+# Generates an uncompressed archive of pre-compiled ACPI table upgrade
+# fragments (.aml files) if provided, and prepends it in the initramfs.
+#
+
+PREREQ=""
+
+ACPI_UPGRADES_CONFIG=/etc/default/acpi-upgrades
+
+prereqs()
+{
+   echo "$PREREQ"
+}
+
+case $1 in
+prereqs)
+   prereqs
+   exit 0
+   ;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+verbose()
+{
+	if [ "${verbose}" = "y" ] ; then
+		echo "acpi-upgrades: $@"
+	fi
+	:
+}
+
+if [ "${verbose}" = "y" ] ; then
+	CP_OPTIONS="-v"
+	CPIO_OPTIONS="-v"
+else
+	CP_OPTIONS=""
+	CPIO_OPTIONS="--quiet"
+fi
+
+ACPI_AML_DIR=/lib/firmware/acpi-upgrades
+
+# Load default settings from config file, if present
+[ -r ${ACPI_UPGRADES_CONFIG} ] && . ${ACPI_UPGRADES_CONFIG}
+
+verbose "Checking for ACPI upgrades to include..."
+
+# Create a temp dir to build an uncompressed CPIO archive
+ACPI_TMP_BASE=$(mktemp -d) || {
+	echo "acpi-upgrades: cannot create temporary base directory" >&2
+	exit 1
+}
+
+ACPI_TMP_AML="${ACPI_TMP_BASE}/kernel/firmware/acpi"
+mkdir -p "$ACPI_TMP_AML" || {
+	echo "acpi-upgrades: cannot create temporary directory" >&2
+	rm -rf "${ACPI_TMP_BASE}"
+	exit 1
+}
+
+AML_INPUT_FILES=$(ls ${ACPI_AML_DIR}/*.aml 2>/dev/null)
+if [ -z "${AML_INPUT_FILES}" ] ; then
+	verbose "No input files found in ${ACPI_AML_DIR}"
+	rm -rf "${ACPI_TMP_BASE}"
+	exit 0
+else
+	cp -f $AML_INPUT_FILES "${ACPI_TMP_AML}" || {
+		echo "acpi-upgrades: failed to copy input files" >&2
+		rm -rf "${ACPI_TMP_BASE}"
+		exit 1
+	}
+fi
+
+ACPI_TMP_INITRD="${ACPI_TMP_BASE}/initrd"
+cd "${ACPI_TMP_BASE}" \
+	&& find kernel | cpio $CPIO_OPTIONS -H newc --create > "${ACPI_TMP_INITRD}" \
+        && cd "${OLDPWD}" \
+	&& prepend_earlyinitramfs "$ACPI_TMP_INITRD" && {
+		rm -rf "${ACPI_TMP_BASE}"
+		exit 0
+	}

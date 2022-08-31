@@ -1,0 +1,11 @@
+Source: pinctrl-upboard
+Maintainer: Gary Wang <garywang@aaeon.com.tw>
+Section: misc
+Priority: optional
+Standards-Version: 4.5.0
+
+Package: pinctrl-upboard
+Architecture: all
+Depends: dkms, ${misc:Depends}
+Description: DKMS source for upboard pin controller driver
+

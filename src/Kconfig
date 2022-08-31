@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# up board pin controller driver
+
+if (X86 || COMPILE_TEST)
+
+config PINCTRL_UPBOARD
+	tristate "UP board FPGA pin controller"
+	depends on ACPI
+	select GPIOLIB
+	select GPIOLIB_IRQCHIP
+	select PINMUX
+	select PINCONF
+	select GENERIC_PINCONF
+	select REGMAP
+	help
+	  Pin controller for the FPGA GPIO lines on UP boards. Due to the
+	  hardware layout, these are meant to be controlled in tandem with their
+	  corresponding Intel SoC GPIOs.
+	  
+config PINCTRL_UPBOARD_FPGA
+	tristate
+	
+config PINCTRL_UPBOARD_CFG
+	tristate
+	
+endif
