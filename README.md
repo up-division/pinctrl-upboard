@@ -25,11 +25,27 @@ debuild -i -us -uc
 
 build kernel modules
 ----------------------
-Developing & debug purpose, please make sure you have installed linux herader and build-essential,
+Developing/debug purpose or used on none Debian-based Linux distributions, please make sure you have installed linux herader and build-essential,
 in pinctrl-upboard folder type following command
 ```
 cd src && make
 ```
+
+Install deb package
+=============================================
+Install deb package on Debian-based Linux distributions like Ubuntu, Linux Mint, Parrot....
+
+1. install DKMS
+---------------
+```
+sudo apt install dkms 
+```
+2. install deb package
+------------------------
+```
+sudo dpkg -i pinctrl-upboard_0.2.1_all.deb
+```
+
 
 HAT Pins information
 =============================================
