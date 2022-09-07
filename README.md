@@ -25,10 +25,10 @@ debuild -i -us -uc
 
 build kernel modules
 ----------------------
-Developing/debug purpose or used on none Debian-based Linux distributions, please make sure you have installed linux herader and build-essential,
+Developing/debug purpose or used on none Debian-based Linux distributions, please make sure you have installed linux header and build-essential,
 in pinctrl-upboard folder type following command
 ```
-cd src && make
+cd files && make
 ```
 
 Install deb package
@@ -49,5 +49,5 @@ sudo dpkg -i pinctrl-upboard_0.2.1_all.deb
 
 HAT Pins information
 =============================================
-please refer our UP WiKi for more detail
+please refer UP WiKi for more detail
 * https://wiki.up-community.org/

@@ -18,22 +18,26 @@ obj-m += pinctrl-upboard.o
 obj-m += pinctrl-upelement.o
 
 ifeq ($(KERNELDIR),)
-KERNELDIR=/lib/modules/$(shell uname -r)/build
+KERNEL_SRC=/lib/modules/$(shell uname -r)/build
 endif
 	
 all:
-	make -C $(KERNELDIR) M=$(PWD) modules
+	make -C $(KERNEL_SRC) M=$(PWD) modules
 
 clean:
-	make -C $(KERNELDIR) M=$(PWD) clean
+	make -C $(KERNEL_SRC) M=$(PWD) clean
 	
 # build root.
 install: all
-	make -C $(KERNELDIR) M=$(PWD) modules_install
+	make -C $(KERNEL_SRC) M=$(PWD) modules_install
 	
 # build root.
 uninstall:
-	make -C $(KERNELDIR) M=$(PWD) modules_uninstall
+	make -C $(KERNEL_SRC) M=$(PWD) modules_uninstall
+
+# Yocto out-of-tree kernel modules
+modules_install:
+	$(MAKE) -C $(KERNEL_SRC) M=$(PWD) modules_install
 
 setup:
 	sh setup.sh
