@@ -17,7 +17,7 @@ obj-m += leds-upboard.o
 obj-m += pinctrl-upboard.o
 obj-m += pinctrl-upelement.o
 
-ifeq ($(KERNELDIR),)
+ifeq ($(KERNEL_SRC),)
 KERNEL_SRC=/lib/modules/$(shell uname -r)/build
 endif
 	
