@@ -67,7 +67,6 @@
 #define PADCFG0_GPIROUTSMI		BIT(18)
 #define PADCFG0_GPIROUTNMI		BIT(17)
 #define PADCFG0_PMODE_SHIFT		10
-#define PADCFG0_ADL_PMODE_SHIFT		11
 #define PADCFG0_PMODE_MASK		GENMASK(13, 10)
 #define PADCFG0_PMODE_GPIO		0
 #define PADCFG0_GPIORXDIS		BIT(9)
@@ -98,7 +97,17 @@
 #define pin_to_padno(c, p)	((p) - (c)->pin_base)
 #define padgroup_offset(g, p)	((p) - (g)->base)
 
-static u8 pad_mode_shift = PADCFG0_PMODE_SHIFT;
+struct intel_pinctrl {
+	struct device *dev;
+	raw_spinlock_t lock;
+	struct pinctrl_desc pctldesc;
+	struct pinctrl_dev *pctldev;
+	struct gpio_chip chip;
+	struct irq_chip irqchip;
+	void *soc;
+	void *communities;
+	size_t ncommunities;
+};
 
 struct upboard_pin {
 	struct regmap_field *funcbit;
@@ -122,8 +131,8 @@ struct upboard_pinctrl {
 	struct pinctrl_desc *pctldesc;
 	struct upboard_pin *pins;
 	struct regmap *regmap;
-//	struct irq_chip irqchip;
 	const unsigned int *rpi_mapping;
+	int ident;	
 };
 
 enum upboard_func0_fpgabit {
@@ -837,14 +846,14 @@ static int upboard_fpga_set_direction(struct pinctrl_dev *pctldev,
 
 static int upboard_get_functions_count(struct pinctrl_dev *pctldev)
 {
-	dev_info(pctldev->dev,"upboard_get_functions_count");
+	//dev_info(pctldev->dev,"upboard_get_functions_count");
 	return 0;
 }
 
 static const char *upboard_get_function_name(struct pinctrl_dev *pctldev,
 				     unsigned int selector)
 {
-	dev_info(pctldev->dev,"upboard_get_function_name:%d",selector);
+	//dev_info(pctldev->dev,"upboard_get_function_name:%d",selector);
 	return NULL;
 }
 
@@ -936,10 +945,33 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name)
 	}
 	//change to alternate function
 	for(i=0;i<cnt;i++){
-		unsigned int val = readl(pctrl->pins[offset[i]].regs) | 1<<pad_mode_shift;
-		writel(val,pctrl->pins[offset[i]].regs);
-		upboard_fpga_request_free(pctrl->pctldev,offset[i]);
+		if(pctrl->pins[offset[i]].regs==NULL)
+			continue;
 
+		if(strstr(pctrl->pctldesc->pins[offset[i]].name,"I2C")){
+			unsigned int val = readl(pctrl->pins[offset[i]].regs) | 2<<PADCFG0_PMODE_SHIFT; //mode 2 
+			writel(val,pctrl->pins[offset[i]].regs);
+			continue;
+		}
+		else if(strstr(pctrl->pctldesc->pins[offset[i]].name,"UART")){
+			unsigned int val = readl(pctrl->pins[offset[i]].regs) | 2<<PADCFG0_PMODE_SHIFT; //mode 2
+			writel(val,pctrl->pins[offset[i]].regs);	
+		}
+		else if(strstr(pctrl->pctldesc->pins[offset[i]].name,"SPI")){
+			unsigned int val = readl(pctrl->pins[offset[i]].regs) | 7<<PADCFG0_PMODE_SHIFT; //mode 7
+			writel(val,pctrl->pins[offset[i]].regs);	
+		}
+		else if(strstr(pctrl->pctldesc->pins[offset[i]].name,"I2S")){
+			unsigned int val = readl(pctrl->pins[offset[i]].regs) | 4<<PADCFG0_PMODE_SHIFT; //mode 4
+			writel(val,pctrl->pins[offset[i]].regs);	
+		}
+		else {
+			unsigned int val = readl(pctrl->pins[offset[i]].regs) | 1<<PADCFG0_PMODE_SHIFT; //mode 1
+			writel(val,pctrl->pins[offset[i]].regs);	
+		
+		}
+		upboard_fpga_request_free(pctrl->pctldev,offset[i]);
+		
 		//input pins
 		if(strstr(pctrl->pctldesc->pins[offset[i]].name,"RX")){
 			input = true;
@@ -1117,7 +1149,34 @@ static void __iomem *upboard_get_regs(struct gpio_chip *gc, unsigned int pin, un
 	struct platform_device *pdev = to_platform_device(gc->parent);
 	struct resource *res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	size_t nregs;
+
+	//TGL/ADL
+	if(strstr(dev_name(&pdev->dev),"INTC1055:00")) {
+		struct intel_pinctrl *intel_pctrl = gpiochip_get_data(gc);
+		struct pinctrl_dev *pctldev = intel_pctrl->pctldev; //of_pinctrl_get(gc->parent->of_node);
 	
+		if(pctldev==NULL)
+			return NULL;
+		struct pinctrl_gpio_range *range = pinctrl_find_gpio_range_from_pin(pctldev, pin);
+		
+		if(range)
+			pin = pin-range->pin_base;
+		else
+			return NULL;
+	
+		if(range->pin_base < 67){
+			res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+		}
+		else if(range->pin_base < 171){
+			res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+		}
+		else if(range->pin_base < 260){
+			res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+		}
+		else {
+			res = platform_get_resource(pdev, IORESOURCE_MEM, 3);
+		}
+	}	
 	if (IS_ERR(res)) {
 		dev_info(gc->parent,"upboard resource get failed");	
 		return NULL;
@@ -1402,8 +1461,7 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 		system_id = dmi_first_match(upboard_dmi_table);
 		if (system_id) {
 			bios_info = system_id->driver_data;
-			if (system_id->ident == 15)	//UPX-ADL
-				pad_mode_shift = PADCFG0_ADL_PMODE_SHIFT;
+			pctrl->ident = system_id->ident;
 		}
 		
 	}
@@ -1426,7 +1484,7 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 	//display mapping info.
 	//for(i=0;i<pctldesc->npins;i++){
 	//	dev_info(&pdev->dev,"Name:%s, GPIO:%d, IRQ:%d, regs:0x%08x",
-	//	pctldesc->pins[pctrl->rpi_mapping[i]].name,pins[i].gpio, pins[i].irq, pins[i].regs);
+	//	pctldesc->pins[i].name,pins[i].gpio, pins[i].irq, pins[i].regs);
 	//}
 		
 	return ret;
