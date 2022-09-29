@@ -242,11 +242,14 @@ enum upboard_up_reg2_fpgabit {
 	UPFPGA_UP_I2S_DOUT,
 };
 
+#define UPFPGA_UP_UART1_RTS UPFPGA_UP_GPIO17
+#define UPFPGA_UP_UART1_CTS UPFPGA_UP_GPIO16
+
 static struct pinctrl_pin_desc upboard_up_pins[] = {
 	UPBOARD_UP_PIN_FUNC(0, I2C1_SDA, &upboard_i2c1_reg),
 	UPBOARD_UP_PIN_FUNC(0, I2C1_SCL, &upboard_i2c1_reg),
 	UPBOARD_UP_PIN_FUNC(0, ADC0, &upboard_adc0_reg),
-	UPBOARD_UP_PIN_NAME(0, GPIO17),
+	UPBOARD_UP_PIN_NAME(0, UART1_RTS),
 	UPBOARD_UP_PIN_NAME(0, GPIO27),
 	UPBOARD_UP_PIN_NAME(0, GPIO22),
 	UPBOARD_UP_PIN_NAME(0, SPI_MOSI),
@@ -269,7 +272,7 @@ static struct pinctrl_pin_desc upboard_up_pins[] = {
 	UPBOARD_UP_PIN_NAME(1, SPI_CS1),
 	UPBOARD_UP_PIN_FUNC(1, I2C0_SCL, &upboard_i2c0_reg),
 	UPBOARD_UP_PIN_NAME(1, PWM0),
-	UPBOARD_UP_PIN_NAME(1, GPIO16),
+	UPBOARD_UP_PIN_NAME(1, UART1_CTS),
 	UPBOARD_UP_PIN_NAME(1, I2S_DIN),
 	UPBOARD_UP_PIN_NAME(1, I2S_DOUT),
 };
@@ -949,24 +952,56 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name)
 			continue;
 
 		if(strstr(pctrl->pctldesc->pins[offset[i]].name,"I2C")){
-			unsigned int val = readl(pctrl->pins[offset[i]].regs) | 2<<PADCFG0_PMODE_SHIFT; //mode 2 
+			int mode=1;
+			switch(pctrl->ident)
+			{
+				case 15:
+					mode=2;
+				break;
+			}
+			unsigned int val = readl(pctrl->pins[offset[i]].regs) | mode<<PADCFG0_PMODE_SHIFT; 
 			writel(val,pctrl->pins[offset[i]].regs);
 			continue;
 		}
 		else if(strstr(pctrl->pctldesc->pins[offset[i]].name,"UART")){
-			unsigned int val = readl(pctrl->pins[offset[i]].regs) | 2<<PADCFG0_PMODE_SHIFT; //mode 2
+			int mode=1;
+			switch(pctrl->ident)
+			{
+				case 13:
+				case 14:
+					mode=4;
+				break;
+				case 15:
+					mode=2;
+				break;
+			}
+			unsigned int val = readl(pctrl->pins[offset[i]].regs) | mode<<PADCFG0_PMODE_SHIFT;
 			writel(val,pctrl->pins[offset[i]].regs);	
 		}
 		else if(strstr(pctrl->pctldesc->pins[offset[i]].name,"SPI")){
-			unsigned int val = readl(pctrl->pins[offset[i]].regs) | 7<<PADCFG0_PMODE_SHIFT; //mode 7
+			int mode=1;
+			switch(pctrl->ident)
+			{
+				case 15:
+					mode=7;
+				break;
+			}
+			unsigned int val = readl(pctrl->pins[offset[i]].regs) | mode<<PADCFG0_PMODE_SHIFT;
 			writel(val,pctrl->pins[offset[i]].regs);	
 		}
 		else if(strstr(pctrl->pctldesc->pins[offset[i]].name,"I2S")){
-			unsigned int val = readl(pctrl->pins[offset[i]].regs) | 4<<PADCFG0_PMODE_SHIFT; //mode 4
+			int mode=1;
+			switch(pctrl->ident)
+			{
+				case 15:
+					mode=4;
+				break;
+			}
+			unsigned int val = readl(pctrl->pins[offset[i]].regs) | mode<<PADCFG0_PMODE_SHIFT;
 			writel(val,pctrl->pins[offset[i]].regs);	
 		}
 		else {
-			unsigned int val = readl(pctrl->pins[offset[i]].regs) | 1<<PADCFG0_PMODE_SHIFT; //mode 1
+			unsigned int val = readl(pctrl->pins[offset[i]].regs) | 1<<PADCFG0_PMODE_SHIFT;
 			writel(val,pctrl->pins[offset[i]].regs);	
 		
 		}
@@ -1116,6 +1151,20 @@ static const struct dmi_system_id upboard_dmi_table[] __initconst = {
 		},
 		.driver_data = (void *)&upboard_up2_bios_info_v0_3,
 	},
+	{
+		.ident = 13,
+		.matches = { /* UP Xtreme i12 */
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPN-EHL01"),
+		},		
+	},	
+	{
+		.ident = 14,
+		.matches = { /* UP Xtreme i12 */
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPS-EHL01"),
+		},		
+	},		
 	{
 		.ident = 15,
 		.matches = { /* UP Xtreme i12 */
@@ -1482,10 +1531,12 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 	upboard_alt_func_enable(&pctrl->chip,"ADC");
 	
 	//display mapping info.
-	//for(i=0;i<pctldesc->npins;i++){
-	//	dev_info(&pdev->dev,"Name:%s, GPIO:%d, IRQ:%d, regs:0x%08x",
-	//	pctldesc->pins[i].name,pins[i].gpio, pins[i].irq, pins[i].regs);
-	//}
+	for(i=0;i<pctldesc->npins;i++){
+		dev_info(&pdev->dev,"Name:%s, GPIO:%d, IRQ:%d, regs:0x%08x",
+		pctldesc->pins[i].name,pins[i].gpio, pins[i].irq, pins[i].regs);
+		if(pins[i].regs)
+			dev_info(&pdev->dev,"val:%pS", readl(pins[i].regs));
+	}
 		
 	return ret;
 }
