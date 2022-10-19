@@ -1199,8 +1199,8 @@ static void __iomem *upboard_get_regs(struct gpio_chip *gc, unsigned int pin, un
 	struct resource *res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	size_t nregs;
 
-	//TGL/ADL
-	if(strstr(dev_name(&pdev->dev),"INTC1055:00")) {
+	//UP ADL/TGL
+	if(strstr(dev_name(&pdev->dev),"INTC1055:00") || strstr(dev_name(&pdev->dev),"INT34C5:00")) {
 		struct intel_pinctrl *intel_pctrl = gpiochip_get_data(gc);
 		struct pinctrl_dev *pctldev = intel_pctrl->pctldev; //of_pinctrl_get(gc->parent->of_node);
 	
