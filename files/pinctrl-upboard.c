@@ -1085,12 +1085,26 @@ static int upboard_gpio_get(struct gpio_chip *gc, unsigned int offset)
 static void upboard_gpio_set(struct gpio_chip *gc, unsigned int offset, int
 			     value)
 {
+	struct upboard_pinctrl *pctrl = container_of(gc, struct upboard_pinctrl, chip);
+	unsigned int pin = pctrl->rpi_mapping[offset];
 	int gpio = upboard_rpi_to_native_gpio(gc, offset);
 
 	if (gpio < 0)
 		return;
 
 	gpio_set_value(gpio, value);
+
+	//APL03 open drain GPIO
+	if(pctrl->ident == 9) {
+		if(pin==0 || pin ==1) { 
+			int val = readl(pctrl->pins[pin].regs);
+			if(value)
+				val |= PADCFG0_GPIOTXDIS;
+			else
+				val &= ~ PADCFG0_GPIOTXDIS;
+			writel(val,pctrl->pins[pin].regs);
+		}
+	}	
 }
 
 static int upboard_gpio_direction_input(struct gpio_chip *gc,
@@ -1156,15 +1170,22 @@ static const struct dmi_system_id upboard_dmi_table[] __initconst = {
 		.driver_data = (void *)&upboard_up2_bios_info_v0_3,
 	},
 	{
+		.ident = 9,
+		.matches = { /* UP2 */
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UP-APL03"),
+		},		
+	},	
+	{
 		.ident = 13,
-		.matches = { /* UP Xtreme i12 */
+		.matches = { /* UP 6000 */
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPN-EHL01"),
 		},		
 	},	
 	{
 		.ident = 14,
-		.matches = { /* UP Xtreme i12 */
+		.matches = { /* UP squared v2 */
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPS-EHL01"),
 		},		
