@@ -402,6 +402,7 @@ static const struct upboard_bios upboard_up_bios_info_dvt __initconst = {
 #define UPBOARD_UP2_PIN_ANON(r, bit)					\
 	{								\
 		.number = UPBOARD_BIT_TO_PIN(r, bit),			\
+		.name = "NONAME",					\
 	}
 
 #define UPBOARD_UP2_PIN_NAME(r, id)					\
@@ -961,6 +962,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name)
 			}
 			unsigned int val = readl(pctrl->pins[offset[i]].regs) | mode<<PADCFG0_PMODE_SHIFT; 
 			writel(val,pctrl->pins[offset[i]].regs);
+			upboard_fpga_request_free(pctrl->pctldev,offset[i]);
 			continue;
 		}
 		else if(strstr(pctrl->pctldesc->pins[offset[i]].name,"UART")){
@@ -1005,10 +1007,12 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name)
 			writel(val,pctrl->pins[offset[i]].regs);	
 		
 		}
-		upboard_fpga_request_free(pctrl->pctldev,offset[i]);
 		
 		//input pins
 		if(strstr(pctrl->pctldesc->pins[offset[i]].name,"RX")){
+			input = true;
+		}
+		if(strstr(pctrl->pctldesc->pins[offset[i]].name,"CTS")){
 			input = true;
 		}
 		if(strstr(pctrl->pctldesc->pins[offset[i]].name,"ADC")){
@@ -1278,11 +1282,6 @@ int upboard_acpi_node_pin_mapping(struct upboard_fpga *fpga,
 		
 		if (ret)
 			return ret;
-			
-		//debug info for GPIO pin mapping		
-		//dev_info(fpga->dev,"base: %d", gc->base);
-		//dev_info(fpga->dev,"gpio:%d",desc_to_gpio(desc));	
-		//dev_info(fpga->dev,"irq:%d",pctrl->pins[i].irq);
 
 	}
 
@@ -1531,12 +1530,12 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 	upboard_alt_func_enable(&pctrl->chip,"ADC");
 	
 	//display mapping info.
-	for(i=0;i<pctldesc->npins;i++){
-		dev_info(&pdev->dev,"Name:%s, GPIO:%d, IRQ:%d, regs:0x%08x",
-		pctldesc->pins[i].name,pins[i].gpio, pins[i].irq, pins[i].regs);
-		if(pins[i].regs)
-			dev_info(&pdev->dev,"val:%pS", readl(pins[i].regs));
-	}
+	//for(i=0;i<pctldesc->npins;i++){
+	//	dev_info(&pdev->dev,"Name:%s, GPIO:%d, IRQ:%d, regs:0x%08x",
+	//	pctldesc->pins[i].name,pins[i].gpio, pins[i].irq, pins[i].regs);
+	//	if(pins[i].regs)
+	//		dev_info(&pdev->dev,"val:%pS", readl(pins[i].regs));
+	//}
 		
 	return ret;
 }
