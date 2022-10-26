@@ -787,7 +787,6 @@ static int upboard_fpga_request_enable(struct pinctrl_dev *pctldev,
 	const struct upboard_pin *p;
 	int ret=0;
 
-	//dev_info(pctldev->dev,"upboard_gpio_request_enable: %d", pin);
 	if (!pd)
 		return -EINVAL;
 	p = pd->drv_data;
@@ -814,7 +813,6 @@ static int upboard_fpga_request_free(struct pinctrl_dev *pctldev,
 	const struct upboard_pin *p;
 	int ret=0;
 
-	//dev_info(pctldev->dev,"upboard_gpio_request_free: %d", pin);
 	if (!pd)
 		return -EINVAL;
 	p = pd->drv_data;
@@ -844,7 +842,7 @@ static int upboard_fpga_set_direction(struct pinctrl_dev *pctldev,
 	if (!pd)
 		return -EINVAL;
 	p = pd->drv_data;
-	
+	upboard_fpga_request_enable(pctldev,range,pin);		
 	return regmap_field_write(p->dirbit, input);
 };
 
@@ -936,7 +934,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name)
 	bool input = false;
 	
 	//find all pins
-	for(i=0,cnt=0;i<gc->ngpio;i++){
+	for(i=0,cnt=0;i<pctrl->pctldesc->npins;i++){
 		if(strstr(pctrl->pctldesc->pins[i].name,name)){
 			offset[cnt++] = i;
 		}
@@ -1549,6 +1547,7 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 	upboard_alt_func_enable(&pctrl->chip,"I2S");
 	upboard_alt_func_enable(&pctrl->chip,"PWM");
 	upboard_alt_func_enable(&pctrl->chip,"ADC");
+	upboard_alt_func_enable(&pctrl->chip,"NONAME");	//for UP2 I2C pins
 	
 	//display mapping info.
 	//for(i=0;i<pctldesc->npins;i++){
