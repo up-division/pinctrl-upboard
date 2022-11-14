@@ -1022,6 +1022,9 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name)
 		if(strstr(pctrl->pctldesc->pins[offset[i]].name,"DIN")){
 			input = true;
 		}
+		if(strstr(pctrl->pctldesc->pins[offset[i]].name,"SDI")){
+			input = true;
+		}
 		upboard_fpga_set_direction(pctrl->pctldev,NULL, offset[i], input);
 	}
 }
