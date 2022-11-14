@@ -119,11 +119,6 @@ struct upboard_pin {
 	void __iomem *regs; 
 };
 
-struct upboard_bios {
-	const struct reg_sequence *patches;
-	size_t npatches;
-};
-
 struct upboard_pinctrl {
 	struct gpio_chip chip;
 	struct device *dev;
@@ -352,47 +347,6 @@ static const struct upboard_function pin_functions[] = {
 	FUNCTION("adc0",  adc0_groups),
 };
 
-
-/*
- * Init patches applied to the registers until the BIOS sets proper defaults
- */
-static const struct reg_sequence upboard_up_reg_patches[] __initconst = {
-	{ UPFPGA_REG_FUNC_EN0,
-		// enable I2C voltage-level shifters
-		BIT(UPFPGA_I2C0_EN) |
-		BIT(UPFPGA_I2C1_EN) |
-		// enable adc
-		BIT(UPFPGA_ADC0_EN)
-	},
-	/* HAT function pins initially set as inputs */
-	{ UPFPGA_REG_GPIO_DIR0,
-		BIT(UPFPGA_UP_I2C1_SDA)	    |
-		BIT(UPFPGA_UP_I2C1_SCL)	    |
-		BIT(UPFPGA_UP_ADC0)	    |
-		BIT(UPFPGA_UP_GPIO27)	    |
-		BIT(UPFPGA_UP_GPIO22)	    |
-		BIT(UPFPGA_UP_SPI_MISO)	    |
-		BIT(UPFPGA_UP_I2C0_SDA)	    |
-		BIT(UPFPGA_UP_GPIO5)	    |
-		BIT(UPFPGA_UP_GPIO6)	    |
-		BIT(UPFPGA_UP_GPIO26)
-	},
-	{ UPFPGA_REG_GPIO_DIR1,
-		BIT(UPFPGA_UP_UART1_RX)	|
-		BIT(UPFPGA_UP_GPIO23)	|
-		BIT(UPFPGA_UP_GPIO24)	|
-		BIT(UPFPGA_UP_GPIO25)	|
-		BIT(UPFPGA_UP_I2C0_SCL)	|
-		BIT(UPFPGA_UP_GPIO16)	|
-		BIT(UPFPGA_UP_I2S_DIN)
-	},
-};
-
-static const struct upboard_bios upboard_up_bios_info_dvt __initconst = {
-	.patches = upboard_up_reg_patches,
-	.npatches = ARRAY_SIZE(upboard_up_reg_patches),
-};
-
 /*
  * UP^2 board data
  */
@@ -558,46 +512,6 @@ static const unsigned int upboard_up2_rpi_mapping[] = {
 };
 
 /*
- * Init patches applied to the registers until the BIOS sets proper defaults
- */
-static const struct reg_sequence upboard_up2_reg_patches[] __initconst = {
-	// enable I2C voltage-level shifters
-	{ UPFPGA_REG_FUNC_EN0,
-		BIT(UPFPGA_I2C0_EN) |
-		BIT(UPFPGA_I2C1_EN)
-	},
-	// HAT function pins initially set as inputs
-	{ UPFPGA_REG_GPIO_DIR0,
-		BIT(UPFPGA_UP2_UART1_RXD) |
-		BIT(UPFPGA_UP2_UART1_CTS)
-	},
-	{ UPFPGA_REG_GPIO_DIR1,
-		BIT(UPFPGA_UP2_SPI1_RXD)
-	},
-	// HAT function pins initially enabled (i.e. not hi-Z)
-	{ UPFPGA_REG_GPIO_EN0,
-		BIT(UPFPGA_UP2_UART1_TXD) |
-		BIT(UPFPGA_UP2_UART1_RXD) |
-		BIT(UPFPGA_UP2_UART1_RTS) |
-		BIT(UPFPGA_UP2_UART1_CTS) |
-		BIT(UPFPGA_UP2_SPI1_TXD)
-	},
-	{ UPFPGA_REG_GPIO_EN1,
-		BIT(UPFPGA_UP2_SPI1_RXD) |
-		BIT(UPFPGA_UP2_SPI1_FS1) |
-		BIT(UPFPGA_UP2_SPI1_FS0) |
-		BIT(UPFPGA_UP2_SPI1_CLK) |
-		BIT(UPFPGA_UP2_PWM1) |
-		BIT(UPFPGA_UP2_PWM0)
-	},
-};
-
-static const struct upboard_bios upboard_up2_bios_info_v0_3 __initconst = {
-	.patches = upboard_up2_reg_patches,
-	.npatches = ARRAY_SIZE(upboard_up2_reg_patches),
-};
-
-/*
  * UP Core board + CREX carrier board data
  */
 
@@ -702,76 +616,12 @@ static unsigned int upboard_upcore_crex_rpi_mapping[] = {
 };
 
 /*
- * Init patches applied to the registers until the BIOS sets proper defaults
- */
-static const struct reg_sequence upboard_upcore_crex_reg_patches[] __initconst = {
-	// enable I2C voltage-level shifters
-	{ UPFPGA_REG_FUNC_EN0,
-		BIT(UPFPGA_I2C0_EN) |
-		BIT(UPFPGA_I2C1_EN)
-	},
-	// HAT function pins initially set as inputs
-	{ UPFPGA_REG_GPIO_DIR0,
-		BIT(UPFPGA_UPCORE_CREX_SPI2_MISO) |
-		BIT(UPFPGA_UPCORE_CREX_UART1_RXD) |
-		BIT(UPFPGA_UPCORE_CREX_I2S2_FRM) |
-		BIT(UPFPGA_UPCORE_CREX_I2S2_CLK) |
-		BIT(UPFPGA_UPCORE_CREX_I2S2_RX)
-	},
-};
-
-static const struct upboard_bios upboard_upcore_crex_bios_info __initconst = {
-	.patches = upboard_upcore_crex_reg_patches,
-	.npatches = ARRAY_SIZE(upboard_upcore_crex_reg_patches),
-};
-
-/*
  * UP Core board + CRST02 carrier board data
  */
 
 #define upboard_upcore_crst02_pins        upboard_upcore_crex_pins
 #define upboard_upcore_crst02_rpi_mapping upboard_upcore_crex_rpi_mapping
 
-/*
- * Init patches applied to the registers until the BIOS sets proper defaults
- */
-static const struct reg_sequence upboard_upcore_crst02_reg_patches[] __initconst = {
-	// enable I2C voltage-level shifters
-	{ UPFPGA_REG_FUNC_EN0,
-		BIT(UPFPGA_I2C0_EN) |
-		BIT(UPFPGA_I2C1_EN)
-	},
-	// HAT function pins initially set as inputs
-	{ UPFPGA_REG_GPIO_DIR0,
-		BIT(UPFPGA_UPCORE_CREX_SPI2_MISO) |
-		BIT(UPFPGA_UPCORE_CREX_UART1_RXD) |
-		BIT(UPFPGA_UPCORE_CREX_I2S2_FRM) |
-		BIT(UPFPGA_UPCORE_CREX_I2S2_CLK) |
-		BIT(UPFPGA_UPCORE_CREX_I2S2_RX)
-	},
-	// HAT function pins initially enabled (i.e. not hi-Z)
-	{ UPFPGA_REG_GPIO_EN0,
-		BIT(UPFPGA_UPCORE_CREX_SPI2_CS0) |
-		BIT(UPFPGA_UPCORE_CREX_SPI2_MOSI) |
-		BIT(UPFPGA_UPCORE_CREX_SPI2_MISO) |
-		BIT(UPFPGA_UPCORE_CREX_SPI2_CLK) |
-		BIT(UPFPGA_UPCORE_CREX_UART1_TXD) |
-		BIT(UPFPGA_UPCORE_CREX_UART1_RXD) |
-		BIT(UPFPGA_UPCORE_CREX_PWM0) |
-		BIT(UPFPGA_UPCORE_CREX_PWM1) |
-		BIT(UPFPGA_UPCORE_CREX_I2S2_FRM) |
-		BIT(UPFPGA_UPCORE_CREX_I2S2_CLK) |
-		BIT(UPFPGA_UPCORE_CREX_I2S2_RX)
-	},
-	{ UPFPGA_REG_GPIO_EN1,
-		BIT(UPFPGA_UPCORE_CREX_I2S2_TX)
-	},
-};
-
-static const struct upboard_bios upboard_upcore_crst02_bios_info __initconst = {
-	.patches = upboard_upcore_crst02_reg_patches,
-	.npatches = ARRAY_SIZE(upboard_upcore_crst02_reg_patches),
-};
 
 static int upboard_set_mux(struct pinctrl_dev *pctldev, unsigned int function,
 			   unsigned int group)
@@ -889,9 +739,36 @@ static const char *upboard_get_group_name(struct pinctrl_dev *pctldev,
 	return NULL;
 }
 
+static void upboard_pin_dbg_show(struct pinctrl_dev *pctldev, struct seq_file *s,
+			       unsigned int pin)
+{
+	struct upboard_pinctrl *pctrl = pinctrl_dev_get_drvdata(pctldev);
+	void __iomem *padcfg;
+	u32 cfg0, cfg1, mode;
+	int locked;
+	bool acpi;
+
+	cfg0 = readl(pctrl->pins[pin].regs);
+	cfg1 = readl(pctrl->pins[pin].regs+PADCFG1);
+
+	mode = (cfg0 & PADCFG0_PMODE_MASK) >> PADCFG0_PMODE_SHIFT;
+	if (mode == PADCFG0_PMODE_GPIO)
+		seq_puts(s, "GPIO ");
+	else
+		seq_printf(s, "mode %d ", mode);
+
+	seq_printf(s, "0x%08x 0x%08x", cfg0, cfg1);
+
+	/* Dump the additional PADCFG registers if available */
+	padcfg = pctrl->pins[pin].regs+PADCFG2;
+	if (padcfg)
+		seq_printf(s, " 0x%08x", readl(padcfg));
+}
+
 static const struct pinctrl_ops upboard_pinctrl_ops = {
 	.get_groups_count = upboard_get_groups_count,
 	.get_group_name = upboard_get_group_name,
+	.pin_dbg_show = upboard_pin_dbg_show,
 };
 
 static struct pinctrl_desc upboard_up_pinctrl_desc = {
@@ -1160,7 +1037,6 @@ static const struct dmi_system_id upboard_dmi_table[] __initconst = {
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UP-CHT01"),
 			DMI_EXACT_MATCH(DMI_BOARD_VERSION, "V0.4"),
 		},
-		.driver_data = (void *)&upboard_up_bios_info_dvt,
 	},
 	{
 		.matches = { /* UP2 */
@@ -1168,7 +1044,6 @@ static const struct dmi_system_id upboard_dmi_table[] __initconst = {
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UP-APL01"),
 			DMI_EXACT_MATCH(DMI_BOARD_VERSION, "V0.3"),
 		},
-		.driver_data = (void *)&upboard_up2_bios_info_v0_3,
 	},
 	{
 		.ident = 9,
@@ -1397,7 +1272,6 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 	struct upboard_fpga * const fpga = dev_get_drvdata(pdev->dev.parent);
 	struct acpi_device * const adev = ACPI_COMPANION(&pdev->dev);
 	struct pinctrl_desc *pctldesc;
-	const struct upboard_bios *bios_info = NULL;
 	struct upboard_pinctrl *pctrl;
 	struct upboard_pin *pins;
 	const struct dmi_system_id *system_id;
@@ -1426,12 +1300,10 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 		pctldesc = &upboard_upcore_crex_pinctrl_desc;
 		rpi_mapping = upboard_upcore_crex_rpi_mapping;
 		ngpio  = ARRAY_SIZE(upboard_upcore_crex_rpi_mapping);
-		bios_info = &upboard_upcore_crex_bios_info;
 	} else if (!strcmp(hid, "AANT0F03")) {
 		pctldesc = &upboard_upcore_crst02_pinctrl_desc;
 		rpi_mapping = upboard_upcore_crst02_rpi_mapping;
 		ngpio  = ARRAY_SIZE(upboard_upcore_crst02_rpi_mapping);
-		bios_info = &upboard_upcore_crst02_bios_info;
 	} else
 		return -ENODEV;
 
@@ -1526,24 +1398,12 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 	if (ret)
 		return ret;
 
-	if (! bios_info) {
-		/* check for special board versions that require register patches */
-		system_id = dmi_first_match(upboard_dmi_table);
-		if (system_id) {
-			bios_info = system_id->driver_data;
-			pctrl->ident = system_id->ident;
-		}
-		
+	/* check for special board versions that require register patches */
+	system_id = dmi_first_match(upboard_dmi_table);
+	if (system_id) {
+		pctrl->ident = system_id->ident;
 	}
 
-	if (bios_info && bios_info->patches) {
-		ret = regmap_register_patch(pctrl->regmap,
-					    bios_info->patches,
-					    bios_info->npatches);
-		if (ret)
-			return ret;
-	}
-	
 	upboard_alt_func_enable(&pctrl->chip,"I2C");
 	upboard_alt_func_enable(&pctrl->chip,"SPI");
 	upboard_alt_func_enable(&pctrl->chip,"SPI1");
@@ -1553,14 +1413,6 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 	upboard_alt_func_enable(&pctrl->chip,"PWM");
 	upboard_alt_func_enable(&pctrl->chip,"ADC");
 	upboard_alt_func_enable(&pctrl->chip,"NONAME");	//for UP2 I2C pins
-	
-	//display mapping info.
-	//for(i=0;i<pctldesc->npins;i++){
-	//	dev_info(&pdev->dev,"Name:%s, GPIO:%d, IRQ:%d, regs:0x%08x",
-	//	pctldesc->pins[i].name,pins[i].gpio, pins[i].irq, pins[i].regs);
-	//	if(pins[i].regs)
-	//		dev_info(&pdev->dev,"val:%pS", readl(pins[i].regs));
-	//}
 		
 	return ret;
 }
