@@ -929,8 +929,8 @@ static struct pinctrl_desc upboard_upcore_crst02_pinctrl_desc = {
 static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name)
 {
 	struct upboard_pinctrl *pctrl = container_of(gc, struct upboard_pinctrl, chip);
-	int offset[gc->ngpio];
-	int i,j,cnt;
+	int offset[pctrl->pctldesc->npins];
+	int i,cnt;
 	bool input = false;
 	
 	//find all pins
@@ -940,7 +940,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name)
 		}
 	}
 	for(i=0;i<cnt;i++){
-		if(gpio_request(pctrl->pins[offset[i]].gpio,module_name(THIS_MODULE)) == -EBUSY)
+		if(gpio_request(pctrl->pins[offset[i]].gpio,module_name(THIS_MODULE)))
 			return; //used
 		else
 			gpio_free(pctrl->pins[offset[i]].gpio);
@@ -1543,6 +1543,8 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 	
 	upboard_alt_func_enable(&pctrl->chip,"I2C");
 	upboard_alt_func_enable(&pctrl->chip,"SPI");
+	upboard_alt_func_enable(&pctrl->chip,"SPI1");
+	upboard_alt_func_enable(&pctrl->chip,"SPI2");
 	upboard_alt_func_enable(&pctrl->chip,"UART");
 	upboard_alt_func_enable(&pctrl->chip,"I2S");
 	upboard_alt_func_enable(&pctrl->chip,"PWM");
