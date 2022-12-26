@@ -1,3 +1,12 @@
+pinctrl-upboard (1.0.0) stretch; urgency=medium
+
+  * MR1 Release.
+  * change copyright
+  * remove unnecessary and unfinish code
+  * fix SPI function issue
+  * add UPN-ADLN support
+
+ -- Gary Wang <garywang@aaeon.com.tw>  Tue, 26 Oct 2022 10:27:28 +0100
 pinctrl-upboard (0.8.0) stretch; urgency=medium
 
   * RC2 Release.

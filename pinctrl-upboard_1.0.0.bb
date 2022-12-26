@@ -7,8 +7,8 @@ inherit module
 
 SRC_URI = "file://Makefile \
 	   file://core.h \
-           file://upboard-fpga.c \
-	   file://upboard-fpga.h \
+           file://upboard-cpld.c \
+	   file://upboard-cpld.h \
            file://upboard-ec.c \
            file://upboard-ec.h \
            file://leds-upboard.c \

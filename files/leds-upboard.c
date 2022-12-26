@@ -1,13 +1,11 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * UP Board FPGA-based LED driver
+ * UP Board CPLD/FPGA based LED driver
  *
- * Copyright (c) 2017, Emutex Ltd. All rights reserved.
+ * Copyright (c) AAEON. All rights reserved.
  *
- * Author: Javier Arteaga <javier@emutex.com>
+ * Author: Gary Wang <garywang@aaeon.com.tw>
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
  */
 
 #include <linux/kernel.h>
@@ -16,7 +14,7 @@
 #include <linux/platform_device.h>
 #include <linux/regmap.h>
 
-#include "upboard-fpga.h"
+#include "upboard-cpld.h"
 
 struct upboard_led {
 	struct regmap_field *field;
@@ -40,7 +38,6 @@ static void upboard_led_brightness_set(struct led_classdev *cdev,
 {
 	struct upboard_led *led = container_of(cdev, struct upboard_led, cdev);
 
-	dev_info(NULL,"brightness:%d,",brightness);
 	regmap_field_write(led->field, brightness != LED_OFF);
 };
 
@@ -84,7 +81,7 @@ static struct platform_driver upboard_led_driver = {
 
 module_platform_driver_probe(upboard_led_driver, upboard_led_probe);
 
-MODULE_AUTHOR("Javier Arteaga <javier@emutex.com>");
+MODULE_AUTHOR("Gary Wang <garywang@aaeon.com.tw>");
 MODULE_DESCRIPTION("UP Board LED driver");
 MODULE_LICENSE("GPL v2");
 MODULE_ALIAS("platform:upboard-led");

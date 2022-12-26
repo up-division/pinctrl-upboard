@@ -1,13 +1,11 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * UP Element driver and EC configuration support
+ * UP Element EC driver to contorl LEDs and GPIOs 
  *
  * Copyright (c) AAEON. All rights reserved.
  *
  * Author: Gary Wang <garywang@aaeon.com.tw>
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
  */
 
 #include <linux/acpi.h>
@@ -21,10 +19,7 @@
 #include <linux/ioport.h>
 
 #include "upboard-ec.h"
-#include "upboard-fpga.h"
-
-int upboard_ec_read(void *, unsigned int, unsigned int *);
-int upboard_ec_write(void *, unsigned int, unsigned int);
+#include "upboard-cpld.h"
 
 #define UPBOARD_LED_CELL(led_data, n)                   \
 	{                                               \
@@ -69,7 +64,7 @@ static const struct regmap_config upboard_ec_regmap_config = {
 	.reg_read = upboard_ec_read,
 	.reg_write = upboard_ec_write,
 	.fast_io = false,
-//	.cache_type = REGCACHE_NONE,
+	.cache_type = REGCACHE_NONE,
 	.rd_table = &upboard_ec_readable_table,
 	.wr_table = &upboard_ec_writable_table,
 };
@@ -308,5 +303,5 @@ static struct platform_driver upboard_ec_driver = {
 module_platform_driver_probe(upboard_ec_driver, upboard_ec_probe);
 
 MODULE_AUTHOR("Gary Wang <garywang@aaeon.com.tw>");
-MODULE_DESCRIPTION("UP Board EC driver");
+MODULE_DESCRIPTION("UP Element EC driver");
 MODULE_LICENSE("GPL v2");

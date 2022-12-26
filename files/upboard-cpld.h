@@ -1,19 +1,17 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * UP Board FPGA MFD driver interface
+ * UP Board CPLD/FPGA driver
  *
- * Copyright (c) 2017, Emutex Ltd. All rights reserved.
+ * Copyright (c) AAEON. All rights reserved.
  *
- * Author: Javier Arteaga <javier@emutex.com>
+ * Author: Gary Wang <garywang@aaeon.com.tw>
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
  */
 
 #ifndef __LINUX_MFD_UPBOARD_FPGA_H
 #define __LINUX_MFD_UPBOARD_FPGA_H
 
-//fpga/EC protocol version
+//CPLD/FPGA protocol version
 #define UPFPGA_PROTOCOL_V1_HRV 1
 #define UPFPGA_PROTOCOL_V2_HRV 2
 
@@ -39,7 +37,7 @@ enum upboard_fpgareg {
 struct upboard_fpga {
 	struct device *dev;
 	struct regmap *regmap;
-	const struct regmap_config *regmapconf;
+	struct regmap_config *cpld_regmap_config;
 	struct gpio_desc *enable_gpio;
 	struct gpio_desc *reset_gpio;
 	struct gpio_desc *clear_gpio;
@@ -54,6 +52,8 @@ struct upboard_led_data {
 	const char *colour;
 };
 
+int upboard_fpga_read(void *, unsigned int, unsigned int *);
+int upboard_fpga_write(void *, unsigned int, unsigned int);
 bool regmap_check_writeable(struct upboard_fpga *fpga, unsigned int reg);
 
 #endif /*  __LINUX_MFD_UPBOARD_FPGA_H */

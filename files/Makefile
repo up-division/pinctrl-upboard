@@ -11,7 +11,7 @@ CONFIG_GPIO_ACPI:=y
 CONFIG_REGULATOR:=y
 CONFIG_MODULE_SIG:=n
 
-obj-m += upboard-fpga.o
+obj-m += upboard-cpld.o
 obj-m += upboard-ec.o
 obj-m += leds-upboard.o
 obj-m += pinctrl-upboard.o
