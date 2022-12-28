@@ -1,3 +1,8 @@
+pinctrl-upboard (1.0.1) stretch; urgency=medium
+
+  * add UPS-ADLP01 board.
+  
+ -- Gary Wang <garywang@aaeon.com.tw>  Tue, 27 Dec 2022 19:28:13 +0100
 pinctrl-upboard (1.0.0) stretch; urgency=medium
 
   * MR1 Release.

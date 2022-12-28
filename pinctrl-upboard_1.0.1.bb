@@ -7,6 +7,7 @@ inherit module
 
 SRC_URI = "file://Makefile \
 	   file://core.h \
+	   file://pinctrl-intel.h \
            file://upboard-cpld.c \
 	   file://upboard-cpld.h \
            file://upboard-ec.c \
@@ -22,7 +23,7 @@ S = "${WORKDIR}"
 # The inherit of module.bbclass will automatically name module packages with
 # "kernel-module-" prefix as required by the oe-core build environment.
 
-RPROVIDES:${PN} += "kernel-module-upboard-fpga"
+RPROVIDES:${PN} += "kernel-module-upboard-cpld"
 RPROVIDES:${PN} += "kernel-module-upboard-ec"
 RPROVIDES:${PN} += "kernel-module-leds-upboard"
 RPROVIDES:${PN} += "kernel-module-pinctrl-upboard"

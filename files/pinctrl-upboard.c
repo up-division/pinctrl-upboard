@@ -91,6 +91,7 @@
 #define BOARD_UPS_EHL01     14
 #define BOARD_UPX_ADLP01    15
 #define BOARD_UPN_ADLN01    16
+#define BOARD_UPS_ADLP01    15
 
 struct upboard_pin {
 	struct regmap_field *funcbit;
@@ -1170,7 +1171,14 @@ static const struct dmi_system_id upboard_dmi_table[] __initconst = {
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPN-ADLN01"),
 		},		
-	},		
+	},
+	{
+		.ident = BOARD_UPS_ADLP01,
+		.matches = { /* UP Squared i12 */
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPS-ADLP01"),
+		},		
+	},					
 	{ },
 };
 
