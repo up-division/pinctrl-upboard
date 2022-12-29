@@ -13,6 +13,7 @@ Supported products
 * UP Squared 4000
 * UP Element
 * UP Squared Pro 7000
+* UP Squared i12
 
 Building
 =============================================
@@ -44,7 +45,7 @@ sudo apt install dkms
 2. install deb package
 ------------------------
 ```
-sudo dpkg -i pinctrl-upboard_1.0.0_all.deb
+sudo dpkg -i pinctrl-upboard_1.0.1_all.deb
 ```
 
 
