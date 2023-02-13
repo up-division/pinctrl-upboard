@@ -3,16 +3,19 @@ UP boards pin controller driver for UP HAT pins.
 
 Supported products
 =============================================
-* UP Squared/UP Squared Pro
+* UP Squared
+* UP Squared Pro
+* UP Squared V2
 * UP Core
 * UP Core Plus
 * UP Xtreme
 * UP Xtreme i11
 * UP Xtreme i12
 * UP Squared 6000
-* UP Squared 4000
-* UP Element
+* UP 4000
+* UP Element i12
 * UP Squared Pro 7000
+* UP Squared i12
 
 Building
 =============================================
@@ -44,7 +47,7 @@ sudo apt install dkms
 2. install deb package
 ------------------------
 ```
-sudo dpkg -i pinctrl-upboard_1.0.0_all.deb
+sudo dpkg -i pinctrl-upboard_1.0.1_all.deb
 ```
 
 
