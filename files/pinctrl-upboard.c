@@ -925,20 +925,19 @@ static int upboard_rpi_to_native_gpio(struct gpio_chip *gc, unsigned int gpio)
 
 static int upboard_gpio_request(struct gpio_chip *gc, unsigned int offset)
 {
-	struct upboard_pinctrl *pctrl = container_of(gc, struct upboard_pinctrl, chip);
 	int gpio = upboard_rpi_to_native_gpio(gc, offset);
 
 	if (gpio < 0)
 		return gpio;
-
+	
 	return gpio_request(gpio, module_name(THIS_MODULE));
 }
 
 static void upboard_gpio_free(struct gpio_chip *gc, unsigned int offset)
 {
 	struct upboard_pinctrl *pctrl = container_of(gc, struct upboard_pinctrl, chip);
-	int gpio = upboard_rpi_to_native_gpio(gc, offset);
 	unsigned int pin = pctrl->rpi_mapping[offset];
+	int gpio = upboard_rpi_to_native_gpio(gc, offset);
 	char name[strlen(pctrl->pctldesc->pins[pin].name)]; 
 	char *p;
 
@@ -946,7 +945,7 @@ static void upboard_gpio_free(struct gpio_chip *gc, unsigned int offset)
 		return;
 
 	gpio_free(gpio);
-
+	
 	strcpy(name,pctrl->pctldesc->pins[pin].name);
 	p = name;
 	upboard_alt_func_enable(gc,strsep(&p,"_"),pctrl->ident);		
@@ -954,11 +953,29 @@ static void upboard_gpio_free(struct gpio_chip *gc, unsigned int offset)
 
 static int upboard_gpio_get(struct gpio_chip *gc, unsigned int offset)
 {
+	struct upboard_pinctrl *pctrl = container_of(gc, struct upboard_pinctrl, chip);
+	unsigned int pin = pctrl->rpi_mapping[offset];
 	int gpio = upboard_rpi_to_native_gpio(gc, offset);
 
 	if (gpio < 0)
 		return gpio;
-	
+
+	//APL03 board open drain GPIO
+	if(pctrl->ident == BOARD_UP_APL03) {
+		int val=0;
+		switch(pin)
+		{
+			case 0:
+			case 1:
+			case 9:
+			case 23:
+			val = readl(pctrl->pins[pin].regs);
+			return val & 0x00000001;		
+			break;
+		
+		}
+	}		
+
 	return gpio_get_value(gpio);
 }
 
@@ -972,19 +989,26 @@ static void upboard_gpio_set(struct gpio_chip *gc, unsigned int offset, int
 	if (gpio < 0)
 		return;
 
-	gpio_set_value(gpio, value);
-
 	//APL03 board open drain GPIO
 	if(pctrl->ident == BOARD_UP_APL03) {
-		if(pin==0 || pin ==1) { 
-			int val = readl(pctrl->pins[pin].regs);
+		int val=0;
+		switch(pin)
+		{
+			case 0:
+			case 1:
+			case 9:
+			case 23:
+			val = readl(pctrl->pins[pin].regs);
 			if(value)
 				val |= PADCFG0_GPIOTXDIS;
 			else
-				val &= ~ PADCFG0_GPIOTXDIS;
-			writel(val,pctrl->pins[pin].regs);
+				val &= ~PADCFG0_GPIOTXDIS;
+			writel(val,pctrl->pins[pin].regs);			
+			break;
+		
 		}
 	}	
+	gpio_set_value(gpio, value);	
 }
 
 static int upboard_gpio_direction_input(struct gpio_chip *gc,
@@ -1275,7 +1299,7 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 		pd->drv_data = pin;
 		
 		//set output by default
-		regmap_field_write(pin->dirbit, false);
+		//regmap_field_write(pin->dirbit, false);
 	}
 
 	/* create a new pinctrl device and register it */
