@@ -1,3 +1,11 @@
+pinctrl-upboard (1.0.3) stretch; urgency=medium
+
+  * add UP-ADLN01 board
+  * fix apl03 I2C open drain gpio issue
+  * fix pin direction get issue
+  * fix multi function pin set mode issue
+  
+ -- Gary Wang <garywang@aaeon.com.tw>  Tue, 27 Fab 2023 14:18:32 +0100
 pinctrl-upboard (1.0.1) stretch; urgency=medium
 
   * add UPS-ADLP01 board.
