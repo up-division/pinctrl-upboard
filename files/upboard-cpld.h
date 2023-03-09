@@ -37,7 +37,7 @@ enum upboard_fpgareg {
 struct upboard_fpga {
 	struct device *dev;
 	struct regmap *regmap;
-	struct regmap_config *cpld_regmap_config;
+	struct regmap_config *cpld_config;
 	struct gpio_desc *enable_gpio;
 	struct gpio_desc *reset_gpio;
 	struct gpio_desc *clear_gpio;
@@ -52,8 +52,7 @@ struct upboard_led_data {
 	const char *colour;
 };
 
-int upboard_fpga_read(void *, unsigned int, unsigned int *);
-int upboard_fpga_write(void *, unsigned int, unsigned int);
-bool regmap_check_writeable(struct upboard_fpga *fpga, unsigned int reg);
+static int upboard_fpga_read(void *, unsigned int, unsigned int *);
+static int upboard_fpga_write(void *, unsigned int, unsigned int);
 
 #endif /*  __LINUX_MFD_UPBOARD_FPGA_H */
