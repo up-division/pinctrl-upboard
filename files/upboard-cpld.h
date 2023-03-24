@@ -54,5 +54,6 @@ struct upboard_led_data {
 
 static int upboard_fpga_read(void *, unsigned int, unsigned int *);
 static int upboard_fpga_write(void *, unsigned int, unsigned int);
+void upboard_pwm_register(void);
 
 #endif /*  __LINUX_MFD_UPBOARD_FPGA_H */

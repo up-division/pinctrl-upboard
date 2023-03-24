@@ -15,6 +15,7 @@ SRC_URI = "file://Makefile \
            file://leds-upboard.c \
            file://pinctrl-upboard.c \
            file://pinctrl-upelement.c \
+           file://pwm-upboard.c \
            file://COPYING \
           "
 
@@ -28,3 +29,4 @@ RPROVIDES:${PN} += "kernel-module-upboard-ec"
 RPROVIDES:${PN} += "kernel-module-leds-upboard"
 RPROVIDES:${PN} += "kernel-module-pinctrl-upboard"
 RPROVIDES:${PN} += "kernel-module-pinctrl-upelement"
+RPROVIDES:${PN} += "kernel-module-pwm-upboard"

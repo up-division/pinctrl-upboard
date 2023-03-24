@@ -25,6 +25,7 @@
 #include "upboard-cpld.h"
 #include "core.h"
 #include "pinctrl-intel.h"
+#include "pwm-lpss.h"
 
 //for older kernel lost DIRECTION_IN/OUT definition
 #ifndef GPIO_LINE_DIRECTION_IN
@@ -886,6 +887,9 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 				break;
 			}
 		}
+		else if(strstr(pctrl->pctldesc->pins[offset[i]].name,"PWM")){
+			mode=2;
+		}				
 		val |= mode<<PADCFG0_PMODE_SHIFT;		
 		writel(val,pctrl->pins[offset[i]].regs);
 		
@@ -1368,6 +1372,19 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 	upboard_alt_func_enable(&pctrl->chip,"I2S",pctrl->ident);
 	upboard_alt_func_enable(&pctrl->chip,"PWM",pctrl->ident);
 	upboard_alt_func_enable(&pctrl->chip,"ADC",pctrl->ident);
+	
+	//pwm controller
+	switch(pctrl->ident)
+	{
+		case BOARD_UP_WHL01:
+		case BOARD_UPX_WHLite:
+		case BOARD_UPX_TGL:
+		case BOARD_UPX_EDGE_WHL2:
+		case BOARD_UPX_ADLP01:
+		case BOARD_UPN_ADLN01:
+			upboard_pwm_register();
+		break;	
+	}			
 		
 	return ret;
 }

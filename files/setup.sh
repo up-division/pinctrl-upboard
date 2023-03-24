@@ -42,3 +42,13 @@ then
     cp $SRC_DIR/acpi/up6000/*.aml $BASEHOOKSDIR
     echo 'acpi files copied!'
 fi
+if grep -q 'UP-APL03' /sys/class/dmi/id/board_name
+then
+    #check blacklist
+    if grep -q 'blacklist gpio_aaeon' /etc/modprobe.d/blacklist.conf
+    then
+        echo "blacklist gpio_aaeon exist"
+    else
+        echo "blacklist gpio_aaeon" >> /etc/modprobe.d/blacklist.conf
+    fi
+fi

@@ -1,3 +1,9 @@
+pinctrl-upboard (1.0.5) stretch; urgency=medium
+
+  * add PWM support in UP WHL/TGL/ADL-P/ADL-N board
+  * fixe kernel 5.4- build issue 
+  
+ -- Gary Wang <garywang@aaeon.com.tw>  Tue, 24 Mar 2023 16:11:20 +0100
 pinctrl-upboard (1.0.3) stretch; urgency=medium
 
   * add UP-ADLN01 board
