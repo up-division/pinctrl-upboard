@@ -830,7 +830,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 			upboard_fpga_request_free(pctrl->pctldev,offset[i]);
 			continue;
 		}
-		else if(strstr(pctrl->pctldesc->pins[offset[i]].name,"UART")){
+		if(strstr(pctrl->pctldesc->pins[offset[i]].name,"UART")){
 			mode=1;
 			switch(id)
 			{
@@ -843,7 +843,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 				break;
 			}
 		}
-		else if(strstr(pctrl->pctldesc->pins[offset[i]].name,"SPI")){
+		if(strstr(pctrl->pctldesc->pins[offset[i]].name,"SPI")){
 			mode=1;
 			switch(id)
 			{
@@ -878,7 +878,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 				break;
 			}
 		}
-		else if(strstr(pctrl->pctldesc->pins[offset[i]].name,"I2S")){
+		if(strstr(pctrl->pctldesc->pins[offset[i]].name,"I2S")){
 			mode=1;
 			switch(id)
 			{
@@ -887,8 +887,21 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 				break;
 			}
 		}
-		else if(strstr(pctrl->pctldesc->pins[offset[i]].name,"PWM")){
-			mode=2;
+		if(strstr(pctrl->pctldesc->pins[offset[i]].name,"PWM")){
+			switch(id)
+			{
+				case BOARD_UP_WHL01:
+				case BOARD_UPX_WHLite:
+				case BOARD_UPX_TGL:
+				case BOARD_UPX_EDGE_WHL2:
+				case BOARD_UPX_ADLP01:
+				case BOARD_UPN_ADLN01:
+					mode=2;
+				break;	
+				default:
+					mode=1;
+				break;
+			}			
 		}				
 		val |= mode<<PADCFG0_PMODE_SHIFT;		
 		writel(val,pctrl->pins[offset[i]].regs);
