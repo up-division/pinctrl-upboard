@@ -176,7 +176,8 @@ struct pwm_lpss_chip *upboard_pwm_probe(struct device *dev, struct resource *r,
 	lpwm->chip.ops = &pwm_lpss_ops;
 	lpwm->chip.npwm = info->npwm;
 
-	ret = devm_pwmchip_add(dev, &lpwm->chip);
+	ret = pwmchip_add(&lpwm->chip);
+
 	if (ret) {
 		dev_err(dev, "failed to add PWM chip: %d\n", ret);
 		return ERR_PTR(ret);
