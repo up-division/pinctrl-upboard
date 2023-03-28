@@ -4,6 +4,13 @@ SRC_DIR=`pwd`
 echo $SRC_DIR
 #check board name
 echo $(cat /sys/class/dmi/id/board_name)
+
+#force enable ADC & SPI declare in ACPI
+mkdir -p /lib/firmware/acpi-upgrades
+cp $SRC_DIR/acpi/acpi-upgrades /etc/initramfs-tools/hooks/
+cp $SRC_DIR/acpi/adc/*.aml $BASEHOOKSDIR
+cp $SRC_DIR/acpi/spi/*.aml $BASEHOOKSDIR
+
 if grep -q 'UPX-TGL01' /sys/class/dmi/id/board_name
 then
     #check blacklist
