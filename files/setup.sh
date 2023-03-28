@@ -31,8 +31,8 @@ then
         echo "blacklist gpio_aaeon" >> /etc/modprobe.d/blacklist.conf
     fi
     mkdir -p /lib/firmware/acpi-upgrades
-    cp $SRC_DIR/acpi/up6000/acpi-upgrades /etc/initramfs-tools/hooks/
-    cp $SRC_DIR/acpi/up6000/*.aml $BASEHOOKSDIR
+    cp $SRC_DIR/acpi/acpi-upgrades /etc/initramfs-tools/hooks/
+    cp $SRC_DIR/acpi/gpio/*.aml $BASEHOOKSDIR
     echo 'acpi files copied!'
 fi
 if grep -q 'UPS-EHL01' /sys/class/dmi/id/board_name
@@ -45,8 +45,8 @@ then
         echo "blacklist gpio_aaeon" >> /etc/modprobe.d/blacklist.conf
     fi
     mkdir -p /lib/firmware/acpi-upgrades
-    cp $SRC_DIR/acpi/up6000/acpi-upgrades /etc/initramfs-tools/hooks/
-    cp $SRC_DIR/acpi/up6000/*.aml $BASEHOOKSDIR
+    cp $SRC_DIR/acpi/acpi-upgrades /etc/initramfs-tools/hooks/
+    cp $SRC_DIR/acpi/gpio/*.aml $BASEHOOKSDIR
     echo 'acpi files copied!'
 fi
 if grep -q 'UP-APL03' /sys/class/dmi/id/board_name
