@@ -18,10 +18,9 @@ obj-m += pinctrl-upboard.o
 obj-m += pinctrl-upelement.o
 obj-m += pwm-upboard.o
 
-ifeq ($(KERNEL_SRC),)
-KERNEL_SRC=/lib/modules/$(shell uname -r)/build
-endif
-	
+KVERSION := $(shell uname -r)
+KERNEL_SRC := /lib/modules/$(KVERSION)/build
+
 all:
 	make -C $(KERNEL_SRC) M=$(PWD) modules
 
