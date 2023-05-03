@@ -17,7 +17,33 @@ Supported products
 * UP Squared Pro 7000
 * UP Squared i12
 
-Building
+Install deb package
+=============================================
+Install deb package on Debian-based Linux distributions like Ubuntu, Linux Mint, Parrot....
+
+1. install DKMS
+---------------
+```
+sudo apt install dkms 
+```
+Reboot the system before installing the pinctrl driver.
+Download the latest deb package from [the release folder](https://github.com/up-division/pinctrl-upboard/releases)
+
+2. install deb package
+------------------------
+```
+sudo dpkg -i pinctrl-upboard_1.0.5_all.deb
+```
+Reboot the system again before starting to use the 40 pin header functionalities.
+
+HAT Pins usage information
+=============================================
+please refer [UP WiKi for more details](https://github.com/up-board/up-community/wiki/40Pin-Header)
+
+
+Alternatively you can:
+
+Build the driver from source
 =============================================
 build deb package
 ----------------------
@@ -34,24 +60,3 @@ in pinctrl-upboard folder type following command
 ```
 cd files && make
 ```
-
-Install deb package
-=============================================
-Install deb package on Debian-based Linux distributions like Ubuntu, Linux Mint, Parrot....
-
-1. install DKMS
----------------
-```
-sudo apt install dkms 
-```
-2. install deb package
-------------------------
-```
-sudo dpkg -i pinctrl-upboard_1.0.1_all.deb
-```
-
-
-HAT Pins information
-=============================================
-please refer UP WiKi for more detail
-* https://wiki.up-community.org/
