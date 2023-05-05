@@ -398,7 +398,7 @@ int upboard_led_gpio_register(struct upboard_fpga *fpga)
 {
 	struct gpio_led blue_led,yellow_led,green_led,red_led;
 	struct gpio_desc *desc;
-	struct gpio_led upboard_gpio_leds[4];
+	static struct gpio_led upboard_gpio_leds[4];
 	int leds=0;
 	
 	desc = devm_gpiod_get(fpga->dev, "blue", GPIOD_OUT_LOW);
