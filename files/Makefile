@@ -17,6 +17,7 @@ obj-m += leds-upboard.o
 obj-m += pinctrl-upboard.o
 obj-m += pinctrl-upelement.o
 obj-m += pwm-upboard.o
+obj-y += protos.o
 
 KVERSION := $(shell uname -r)
 KERNEL_SRC := /lib/modules/$(KVERSION)/build
@@ -26,6 +27,7 @@ all: check_protos
 	
 clean:
 	make -C $(KERNEL_SRC) M=$(PWD) clean
+	rm protos.h
 	
 # build root.
 install: all
@@ -42,7 +44,7 @@ modules_install:
 # check kernel prototypes definition
 check_protos:
 	@echo "checking prototypes..." 
-	make KCPPFLAGS+="-DTYPES_NO_ERROR_CODE=1" -k -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ $$? -eq 0 ] && echo "#define TYPES_NO_ERROR_CODE 0" > protos.h || echo "#define TYPES_NO_ERROR_CODE 1" > protos.h )
+	make -k -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ $$? -eq 0 ] && echo "#define TYPES_NO_ERROR_CODE 1" > protos.h || echo "#define TYPES_NO_ERROR_CODE 0" > protos.h )
 
 setup:
 	sh setup.sh
