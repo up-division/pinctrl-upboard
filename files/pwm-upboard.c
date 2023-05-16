@@ -16,6 +16,7 @@
 #include <linux/platform_device.h>
 
 #include "pwm-lpss.h"
+#include "protos.h"
 
 #define PWM				0x00000000
 #define PWM_ENABLE			BIT(31)
@@ -60,7 +61,6 @@ static inline void upboard_pwm_write(const struct pwm_device *pwm, u32 value)
 {
 	struct pwm_lpss_chip *lpwm = to_lpwm(pwm->chip);
 
-	dev_info(NULL,"pwm value:%X",value);
 	writel(value, lpwm->regs);
 }
 
@@ -115,8 +115,13 @@ static int upboard_pwm_apply(struct pwm_chip *chip, struct pwm_device *pwm,
 	return 0;
 }
 
+#if TYPES_NO_ERROR_CODE==1
 static void upboard_pwm_get_state(struct pwm_chip *chip, struct pwm_device *pwm,
 			       struct pwm_state *state)
+#else
+static int upboard_pwm_get_state(struct pwm_chip *chip, struct pwm_device *pwm,
+			       struct pwm_state *state)
+#endif
 {
 	struct pwm_lpss_chip *lpwm = to_lpwm(chip);
 	unsigned long base_unit_range;
@@ -142,6 +147,9 @@ static void upboard_pwm_get_state(struct pwm_chip *chip, struct pwm_device *pwm,
 
 	state->polarity = PWM_POLARITY_NORMAL;
 	state->enabled = !!(ctrl & PWM_ENABLE);
+#if TYPES_NO_ERROR_CODE==0
+        return 0;
+#endif  
 }
 
 static const struct pwm_ops pwm_lpss_ops = {

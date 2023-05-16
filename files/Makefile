@@ -21,9 +21,9 @@ obj-m += pwm-upboard.o
 KVERSION := $(shell uname -r)
 KERNEL_SRC := /lib/modules/$(KVERSION)/build
 
-all:
+all: check_protos
 	make -C $(KERNEL_SRC) M=$(PWD) modules
-
+	
 clean:
 	make -C $(KERNEL_SRC) M=$(PWD) clean
 	
@@ -38,6 +38,11 @@ uninstall:
 # Yocto out-of-tree kernel modules
 modules_install:
 	$(MAKE) -C $(KERNEL_SRC) M=$(PWD) modules_install
+	
+# check kernel prototypes definition
+check_protos:
+	@echo "checking prototypes..." 
+	make KCPPFLAGS+="-DTYPES_NO_ERROR_CODE=1" -k -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ $$? -eq 0 ] && echo "#define TYPES_NO_ERROR_CODE 0" > protos.h || echo "#define TYPES_NO_ERROR_CODE 1" > protos.h )
 
 setup:
 	sh setup.sh
