@@ -14,6 +14,8 @@
 #include <linux/pwm.h>
 
 #define MAX_PWMS			4
+#define LPSS_MAX_PWMS			MAX_PWMS
+
 
 struct pwm_lpss_chip {
 	struct pwm_chip chip;
@@ -35,5 +37,11 @@ struct pwm_lpss_boardinfo {
 
 struct pwm_lpss_chip *pwm_lpss_probe(struct device *dev, struct resource *r,
 				     const struct pwm_lpss_boardinfo *info);
+struct pwm_lpss_chip *devm_pwm_lpss_probe(struct device *dev, void __iomem *base,
+					  const struct pwm_lpss_boardinfo *info);
+extern const struct pwm_lpss_boardinfo pwm_lpss_byt_info;
+extern const struct pwm_lpss_boardinfo pwm_lpss_bsw_info;
+extern const struct pwm_lpss_boardinfo pwm_lpss_bxt_info;
+extern const struct pwm_lpss_boardinfo pwm_lpss_tng_info;
 
 #endif	/* __PWM_LPSS_H */

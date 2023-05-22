@@ -17,6 +17,8 @@ obj-m += leds-upboard.o
 obj-m += pinctrl-upboard.o
 obj-m += pinctrl-upelement.o
 obj-m += pwm-upboard.o
+obj-m += pwm-lpss-pci.o
+obj-m += pwm-lpss.o
 obj-y += protos.o
 
 KVERSION := $(shell uname -r)
