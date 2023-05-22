@@ -1,3 +1,14 @@
+pinctrl-upboard (1.0.8) stretch; urgency=medium
+
+  * add prototype check mechanism 
+  * add latest pwm-lpss pwm-lpss-pci modules
+  * fix pwm prototype changed issues
+  * fix Debian 12 pwm not working 
+  * fix gpio leds crash in EHL
+  * fix kernel version when kernel is updated for dkms
+  * fix i2c bus pin mode is not correct in UP-ADLN01
+  
+ -- Gary Wang <garywang@aaeon.com.tw>  Mon, 22 May 2023 13:50:15 +0100
 pinctrl-upboard (1.0.5) stretch; urgency=medium
 
   * add PWM support in UP WHL/TGL/ADL-P/ADL-N board
@@ -11,7 +22,7 @@ pinctrl-upboard (1.0.3) stretch; urgency=medium
   * fix pin direction get issue
   * fix multi function pin set mode issue
   
- -- Gary Wang <garywang@aaeon.com.tw>  Tue, 27 Fab 2023 14:18:32 +0100
+ -- Gary Wang <garywang@aaeon.com.tw>  Mon, 27 Feb 2023 14:18:32 +0100
 pinctrl-upboard (1.0.1) stretch; urgency=medium
 
   * add UPS-ADLP01 board.

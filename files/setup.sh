@@ -3,7 +3,7 @@ BASEHOOKSDIR="/lib/firmware/acpi-upgrades"
 SRC_DIR=`pwd`
 echo $SRC_DIR
 #check board name
-echo $(cat /sys/class/dmi/id/board_name)
+echo "UP_BOARD=$(cat /sys/class/dmi/id/board_name)"
 
 #force enable ADC & SPI declare in ACPI
 mkdir -p /lib/firmware/acpi-upgrades
@@ -59,3 +59,23 @@ then
         echo "blacklist gpio_aaeon" >> /etc/modprobe.d/blacklist.conf
     fi
 fi
+
+if grep -q 'UP-ADLN01' /sys/class/dmi/id/board_name
+then
+    #remove pc00.i2c0 ASL, before update-initramfs
+    rm /lib/firmware/acpi-upgrades/pc00.i2c0.adc0.aml
+fi
+
+# mainly for Debian 12 need --force to replace exist pwm modules, but useful for others
+# check all installed kernel headers and install 
+for group in $(ls /usr/src/) ; do
+ver=$(echo $group | awk -F'linux-headers-' '{print $2}')
+if [ ! -z "$ver" ]
+then
+dkms install --force -m $1 -v $2 -k $ver > cmd.output
+cat cmd.output
+fi 
+done
+
+
+
