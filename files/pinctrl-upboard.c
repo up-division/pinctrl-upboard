@@ -98,7 +98,7 @@
 #define BOARD_UPX_ADLP01    15
 #define BOARD_UPN_ADLN01    16
 #define BOARD_UPS_ADLP01    BOARD_UPX_ADLP01
-#define BOARD_UP_ADLN01     BOARD_UPN_ADLN01
+#define BOARD_UP_ADLN01     18
 
 struct upboard_pin {
 	struct regmap_field *funcbit;
@@ -837,6 +837,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 				case BOARD_UPN_EHL01:
 					mode=4;
 				break;
+				case BOARD_UP_ADLN01:
 				case BOARD_UPN_ADLN01:
 				case BOARD_UPX_ADLP01:
 					mode=2;
@@ -850,6 +851,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 				case BOARD_UP_WHL01:
 					mode=3;
 				break;
+				case BOARD_UP_ADLN01:
 				case BOARD_UPN_ADLN01:
 				case BOARD_UPX_ADLP01:
 					mode=7;
@@ -896,6 +898,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 				case BOARD_UPX_EDGE_WHL2:
 				case BOARD_UPX_ADLP01:
 				case BOARD_UPN_ADLN01:
+				case BOARD_UP_ADLN01:
 					mode=2;
 				break;	
 				default:
