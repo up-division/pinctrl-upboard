@@ -17,6 +17,9 @@ SRC_URI = "file://Makefile \
            file://pinctrl-upelement.c \
            file://pwm-upboard.c \
            file://pwm-lpss.h \
+           file://pwm-lpss.c \
+           file://pwm-lpss-pci.c \
+           file://protos.c \
            file://COPYING \
           "
 
