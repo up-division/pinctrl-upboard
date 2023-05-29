@@ -97,7 +97,11 @@ static struct pci_driver pwm_lpss_driver_pci = {
 	.probe = pwm_lpss_probe_pci,
 	.remove = pwm_lpss_remove_pci,
 	.driver = {
+#if TYPES_NO_ERROR_CODE==1
+		.pm = &pwm_lpss_pci_pm,
+#else
 		.pm = pm_ptr(&pwm_lpss_pci_pm),
+#endif
 	},
 };
 module_pci_driver(pwm_lpss_driver_pci);

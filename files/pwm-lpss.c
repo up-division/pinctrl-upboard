@@ -34,40 +34,6 @@
 /* Size of each PWM register space if multiple */
 #define PWM_SIZE			0x400
 
-/* BayTrail */
-const struct pwm_lpss_boardinfo pwm_lpss_byt_info = {
-	.clk_rate = 25000000,
-	.npwm = 1,
-	.base_unit_bits = 16,
-};
-EXPORT_SYMBOL_GPL(pwm_lpss_byt_info);
-
-/* Braswell */
-const struct pwm_lpss_boardinfo pwm_lpss_bsw_info = {
-	.clk_rate = 19200000,
-	.npwm = 1,
-	.base_unit_bits = 16,
-	.other_devices_aml_touches_pwm_regs = true,
-};
-EXPORT_SYMBOL_GPL(pwm_lpss_bsw_info);
-
-/* Broxton */
-const struct pwm_lpss_boardinfo pwm_lpss_bxt_info = {
-	.clk_rate = 19200000,
-	.npwm = 4,
-	.base_unit_bits = 22,
-	.bypass = true,
-};
-EXPORT_SYMBOL_GPL(pwm_lpss_bxt_info);
-
-/* Tangier */
-const struct pwm_lpss_boardinfo pwm_lpss_tng_info = {
-	.clk_rate = 19200000,
-	.npwm = 4,
-	.base_unit_bits = 22,
-};
-EXPORT_SYMBOL_GPL(pwm_lpss_tng_info);
-
 static inline struct pwm_lpss_chip *to_lpwm(struct pwm_chip *chip)
 {
 	return container_of(chip, struct pwm_lpss_chip, chip);
@@ -283,7 +249,11 @@ struct pwm_lpss_chip *devm_pwm_lpss_probe(struct device *dev, void __iomem *base
 	lpwm->chip.ops = &pwm_lpss_ops;
 	lpwm->chip.npwm = info->npwm;
 
+#if TYPES_NO_ERROR_CODE==1
+	ret = pwmchip_add(&lpwm->chip);
+#else
 	ret = devm_pwmchip_add(dev, &lpwm->chip);
+#endif
 	if (ret) {
 		dev_err(dev, "failed to add PWM chip: %d\n", ret);
 		return ERR_PTR(ret);
