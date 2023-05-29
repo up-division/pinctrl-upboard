@@ -29,7 +29,7 @@ all: check_protos
 	
 clean:
 	make -C $(KERNEL_SRC) M=$(PWD) clean
-	rm protos.h
+	rm -f protos.h
 	
 # build root.
 install: all
@@ -46,7 +46,8 @@ modules_install:
 # check kernel prototypes definition
 check_protos:
 	@echo "checking prototypes..." 
-	make -k -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ $$? -eq 0 ] && echo "#define TYPES_NO_ERROR_CODE 1" > protos.h || echo "#define TYPES_NO_ERROR_CODE 0" > protos.h )
+	rm -f ./protos.h
+	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_NO_ERROR_CODE 1" > protos.h || echo "#define TYPES_NO_ERROR_CODE 0" > protos.h )
 
 setup:
 	sh setup.sh
