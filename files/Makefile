@@ -44,7 +44,7 @@ modules_install:
 	$(MAKE) -C $(KERNEL_SRC) M=$(PWD) modules_install
 	
 # check kernel prototypes definition
-check_protos: check_protos
+check_protos:
 	@echo "checking prototypes..." 
 	rm -f ./protos.h
 	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_NO_ERROR_CODE 1" > protos.h || echo "#define TYPES_NO_ERROR_CODE 0" > protos.h )
