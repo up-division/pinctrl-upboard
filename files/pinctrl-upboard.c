@@ -1398,6 +1398,7 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 		case BOARD_UPX_EDGE_WHL2:
 		case BOARD_UPX_ADLP01:
 		case BOARD_UPN_ADLN01:
+		case BOARD_UP_ADLN01:
 			upboard_pwm_register();
 		break;	
 	}			
