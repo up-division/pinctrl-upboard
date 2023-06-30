@@ -21,8 +21,6 @@
 #include <linux/regmap.h>
 #include <linux/interrupt.h>
 #include <linux/string.h>
-#include <linux/of_device.h>
-#include <linux/of_irq.h>
 
 #include "upboard-cpld.h"
 #include "core.h"
@@ -1102,12 +1100,15 @@ static void __iomem *upboard_get_regs(struct gpio_chip *gc, unsigned int gpio, u
 			for(j=0;j<community->ngpps;j++)
 			{
 				struct intel_padgroup gpps = community->gpps[j];
+				if(gpps.gpio_base == INTEL_GPIO_BASE_NOMAP) //skip no map
+					continue;
 				if(gpio < gc->base+gpps.gpio_base+gpps.size)
 				{
 					res = platform_get_resource(pdev, IORESOURCE_MEM, community->barno);
 					pin = gpio-gc->base-gpps.gpio_base+gpps.base-community->pin_base; 
 					//clear ACPI flag, BIOS should not set HAT pins ACPI flag on ADL platform
 					void __iomem *hostown = community->hostown_offset + gpps.reg_num * 4 + community->regs;
+					writel(readl(hostown)|BIT(gpio-gc->base-gpps.gpio_base),hostown);
 					break;
 				}
 			}
@@ -1171,7 +1172,6 @@ int upboard_acpi_node_pin_mapping(struct upboard_fpga *fpga,
 	for (i = 0; i < descs->ndescs; i++) {
 		unsigned int p = pctrl->rpi_mapping[i];
 		pctrl->pins[p].irq = gpiod_to_irq(gpio_to_desc(i));
-		//irq_set_parent(pctrl->pins[p].irq, pctrl->pins[p].parent_irq);	
 	}
 	
 	//dispose acpi resource
