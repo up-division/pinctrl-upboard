@@ -1,3 +1,10 @@
+pinctrl-upboard (1.1.0) stretch; urgency=medium
+
+  * add interrupt support
+  * fix kernel 5.4- build issue 
+  * fix pwm issue in UP-ADLN01
+  
+ -- Gary Wang <garywang@aaeon.com.tw>  Fri, 60 Jun 2023 10:32:10 +0100
 pinctrl-upboard (1.0.8) stretch; urgency=medium
 
   * add prototype check mechanism 

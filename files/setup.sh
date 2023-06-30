@@ -73,7 +73,6 @@ ver=$(echo $group | awk -F'linux-headers-' '{print $2}')
 if [ ! -z "$ver" ]
 then
 dkms install --force -m $1 -v $2 -k $ver > cmd.output
-cat cmd.output
 fi 
 done
 
