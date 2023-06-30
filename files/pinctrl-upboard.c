@@ -21,6 +21,8 @@
 #include <linux/regmap.h>
 #include <linux/interrupt.h>
 #include <linux/string.h>
+#include <linux/of_device.h>
+#include <linux/of_irq.h>
 
 #include "upboard-cpld.h"
 #include "core.h"
@@ -106,7 +108,8 @@ struct upboard_pin {
 	struct regmap_field *dirbit;
 	unsigned int gpio;	//native pin controller number
 	unsigned int base;	//native pin controller base
-	int irq;		//native pin controller irq
+	int parent_irq;		//native pin controller irq
+	int irq;
 	void __iomem *regs; 
 };
 
@@ -1091,7 +1094,7 @@ static void __iomem *upboard_get_regs(struct gpio_chip *gc, unsigned int gpio, u
 	
 	//check Intel pin controller for all platform
 	if(pctrl->ncommunities>1) {
-		int i,j,offset=0;
+		int i,j;
 
 		pin = -1;
 		for (i = 0; i < pctrl->ncommunities; i++) {
@@ -1102,11 +1105,11 @@ static void __iomem *upboard_get_regs(struct gpio_chip *gc, unsigned int gpio, u
 				if(gpio < gc->base+gpps.gpio_base+gpps.size)
 				{
 					res = platform_get_resource(pdev, IORESOURCE_MEM, community->barno);
-					pin = gpio-gc->base-gpps.gpio_base+offset-community->pin_base;
+					pin = gpio-gc->base-gpps.gpio_base+gpps.base-community->pin_base; 
+					//clear ACPI flag, BIOS should not set HAT pins ACPI flag on ADL platform
+					void __iomem *hostown = community->hostown_offset + gpps.reg_num * 4 + community->regs;
 					break;
 				}
-				
-				offset += gpps.size;
 			}
 			if(pin != -1)
 				break;
@@ -1152,7 +1155,7 @@ int upboard_acpi_node_pin_mapping(struct upboard_fpga *fpga,
 
 		pctrl->pins[i].gpio = desc_to_gpio(desc);
 		pctrl->pins[i].base = gc->base;
-		pctrl->pins[i].irq = gpiod_to_irq(desc);
+		pctrl->pins[i].parent_irq = gpiod_to_irq(desc);
 		pctrl->pins[i].regs = upboard_get_regs(gc,desc_to_gpio(desc),PADCFG0);
 		
 		/* The GPIOs may not be contiguous, so add them 1-by-1 */
@@ -1162,9 +1165,15 @@ int upboard_acpi_node_pin_mapping(struct upboard_fpga *fpga,
 		
 		if (ret)
 			return ret;
-
 	}
 
+	/* IRQ Setting */
+	for (i = 0; i < descs->ndescs; i++) {
+		unsigned int p = pctrl->rpi_mapping[i];
+		pctrl->pins[p].irq = gpiod_to_irq(gpio_to_desc(i));
+		//irq_set_parent(pctrl->pins[p].irq, pctrl->pins[p].parent_irq);	
+	}
+	
 	//dispose acpi resource
 	devm_gpiod_put_array(fpga->dev,descs);
 
@@ -1250,6 +1259,104 @@ static const struct dmi_system_id upboard_dmi_table[] __initconst = {
 		},		
 	},
 	{ },
+};
+
+static irqreturn_t upboard_gpio_irq_handler(int irq, void *data)
+{
+	struct upboard_pin *pin = (struct upboard_pin *)data;
+
+	generic_handle_irq(pin->irq);
+	return IRQ_HANDLED;
+}
+
+static unsigned int upboard_gpio_irq_startup(struct irq_data *d)
+{
+	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
+	struct upboard_pinctrl *pctrl = gpiochip_get_data(gc); 
+	unsigned int offset = irqd_to_hwirq(d);
+	unsigned int p = pctrl->rpi_mapping[offset];
+	struct upboard_pin *pin = &pctrl->pins[p];
+	
+	return request_irq(pin->parent_irq, upboard_gpio_irq_handler,
+			   IRQF_ONESHOT, dev_name(gc->parent), pin);
+}
+
+static void upboard_gpio_irq_shutdown(struct irq_data *d)
+{
+	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
+	struct upboard_pinctrl *pctrl = gpiochip_get_data(gc); 
+	unsigned int offset = irqd_to_hwirq(d);
+	unsigned int p = pctrl->rpi_mapping[offset];
+	struct upboard_pin *pin = &pctrl->pins[p];
+
+	free_irq(pin->parent_irq, pin);
+}
+
+static void upboard_gpio_irq_mask(struct irq_data *d)
+{
+	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
+	struct upboard_pinctrl *pctrl = gpiochip_get_data(gc); 
+	unsigned int offset = irqd_to_hwirq(d);
+	unsigned int p = pctrl->rpi_mapping[offset];
+	struct upboard_pin *pin = &pctrl->pins[p];
+	
+	d->parent_data = irq_get_irq_data(pin->parent_irq);
+	
+	if(d->parent_data)
+		irq_chip_mask_parent(d);	
+}
+
+static void upboard_gpio_irq_unmask(struct irq_data *d)
+{
+	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
+	struct upboard_pinctrl *pctrl = gpiochip_get_data(gc); 
+	unsigned int offset = irqd_to_hwirq(d);
+	unsigned int p = pctrl->rpi_mapping[offset];
+	struct upboard_pin *pin = &pctrl->pins[p];
+	
+	d->parent_data = irq_get_irq_data(pin->parent_irq);
+	
+	if(d->parent_data)
+		irq_chip_unmask_parent(d);
+}
+
+static void upboard_gpio_irq_ack(struct irq_data *d)
+{
+	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
+	struct upboard_pinctrl *pctrl = gpiochip_get_data(gc); 
+	unsigned int offset = irqd_to_hwirq(d);
+	unsigned int p = pctrl->rpi_mapping[offset];
+	struct upboard_pin *pin = &pctrl->pins[p];	
+
+	d->parent_data = irq_get_irq_data(pin->parent_irq);
+	if(d->parent_data)
+		irq_chip_ack_parent(d);	
+}
+
+static int upboard_irq_chip_set_type(struct irq_data *d, unsigned int type)
+{
+	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
+	struct upboard_pinctrl *pctrl = gpiochip_get_data(gc); 
+	unsigned int offset = irqd_to_hwirq(d);
+	unsigned int p = pctrl->rpi_mapping[offset];
+	struct upboard_pin *pin = &pctrl->pins[p];
+
+	d->parent_data = irq_get_irq_data(pin->parent_irq);
+
+	if(d->parent_data)
+		return irq_chip_set_type_parent(d, type);
+
+	return 0;
+}
+
+static struct irq_chip upboard_gpio_irqchip = {
+	.name = "upboard-gpio-irq",
+	.irq_startup = upboard_gpio_irq_startup,
+	.irq_shutdown = upboard_gpio_irq_shutdown,
+	.irq_mask = upboard_gpio_irq_mask,
+	.irq_unmask = upboard_gpio_irq_unmask,
+	.irq_ack = upboard_gpio_irq_ack,
+	.irq_set_type = upboard_irq_chip_set_type,
 };
 
 static int __init upboard_pinctrl_probe(struct platform_device *pdev)
@@ -1357,6 +1464,10 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 	pctrl->chip.ngpio = ngpio;
 	pctrl->pins = pins;
 	
+	/* Setup IRQ chip */
+	pctrl->chip.irq.handler = handle_edge_irq;
+	pctrl->chip.irq.chip = &upboard_gpio_irqchip;	
+	
 	ret = devm_gpiochip_add_data(&pdev->dev, &pctrl->chip, pctrl);
 	if (ret)
 		return ret;
@@ -1373,7 +1484,7 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 					
 	if (ret)
 		return ret;
-
+	
 	/* check for special board versions that require register patches */
 	system_id = dmi_first_match(upboard_dmi_table);
 	if (system_id) {
