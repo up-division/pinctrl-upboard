@@ -1,3 +1,9 @@
+pinctrl-upboard (1.1.1) stretch; urgency=medium
+
+  * fix dkms message 
+  * fix build failed in kernel 6.2 
+  
+ -- Gary Wang <garywang@aaeon.com.tw>  Mon, 21 Aug 2023 17:57:06 +0100
 pinctrl-upboard (1.1.0) stretch; urgency=medium
 
   * add interrupt support
