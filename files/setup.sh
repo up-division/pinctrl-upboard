@@ -68,11 +68,17 @@ fi
 
 # mainly for Debian 12 need --force to replace exist pwm modules, but useful for others
 # check all installed kernel headers and install 
-for group in $(ls /usr/src/) ; do
-ver=$(echo $group | awk -F'linux-headers-' '{print $2}')
+for kernels in $(ls /boot/) ; do
+ver=$(echo $kernels | awk -F'vmlinuz-' '{print $2}')
 if [ ! -z "$ver" ]
 then
+for headers in $(ls /usr/src/) ; do
+head=$(echo $headers | awk -F'linux-headers-' '{print $2}')
+if [ "$head" = "$ver" ]
+then
 dkms install --force -m $1 -v $2 -k $ver > cmd.output
+fi
+done
 fi 
 done
 
