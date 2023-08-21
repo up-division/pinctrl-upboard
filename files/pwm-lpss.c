@@ -221,7 +221,7 @@ static const struct pwm_ops pwm_lpss_ops = {
 	.owner = THIS_MODULE,
 };
 
-struct pwm_lpss_chip *devm_pwm_lpss_probe(struct device *dev, void __iomem *base,
+struct pwm_lpss_chip *upboard_pwm_lpss_probe(struct device *dev, void __iomem *base,
 					  const struct pwm_lpss_boardinfo *info)
 {
 	struct pwm_lpss_chip *lpwm;
@@ -229,8 +229,8 @@ struct pwm_lpss_chip *devm_pwm_lpss_probe(struct device *dev, void __iomem *base
 	int i, ret;
 	u32 ctrl;
 
-	dev_info(NULL,"devm_pwm_lpss_probe");
-	dev_info(NULL,"devm_pwm_lpss_probe");
+	dev_info(NULL,"upboard_pwm_lpss_probe");
+	dev_info(NULL,"upboard_pwm_lpss_probe");
 	if (WARN_ON(info->npwm > LPSS_MAX_PWMS))
 		return ERR_PTR(-ENODEV);
 
@@ -267,7 +267,7 @@ struct pwm_lpss_chip *devm_pwm_lpss_probe(struct device *dev, void __iomem *base
 
 	return lpwm;
 }
-EXPORT_SYMBOL_GPL(devm_pwm_lpss_probe);
+EXPORT_SYMBOL_GPL(upboard_pwm_lpss_probe);
 
 MODULE_DESCRIPTION("PWM driver for Intel LPSS");
 MODULE_AUTHOR("Mika Westerberg <mika.westerberg@linux.intel.com>");

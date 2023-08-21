@@ -71,7 +71,7 @@ const struct pwm_lpss_boardinfo pwm_lpss_tng_info = {
 
 struct pwm_lpss_chip *pwm_lpss_probe(struct device *dev, struct resource *r,
 				     const struct pwm_lpss_boardinfo *info);
-struct pwm_lpss_chip *devm_pwm_lpss_probe(struct device *dev, void __iomem *base,
+struct pwm_lpss_chip *upboard_pwm_lpss_probe(struct device *dev, void __iomem *base,
 					  const struct pwm_lpss_boardinfo *info);
 
 #endif	/* __PWM_LPSS_H */
