@@ -9,7 +9,6 @@
  *
  */
 
-#include <linux/acpi.h>
 #include <linux/dmi.h>
 #include <linux/gpio/consumer.h>
 #include <linux/gpio/driver.h>
@@ -999,27 +998,30 @@ static int upboard_gpio_get(struct gpio_chip *gc, unsigned int offset)
 	struct upboard_pinctrl *pctrl = container_of(gc, struct upboard_pinctrl, chip);
 	unsigned int pin = pctrl->rpi_mapping[offset];
 	int gpio = upboard_rpi_to_native_gpio(gc, offset);
+	int reg_val=readl(pctrl->pins[pin].regs);;
 
 	if (gpio < 0)
 		return gpio;
 
 	//APL03 board open drain GPIO
 	if(pctrl->ident == BOARD_UP_APL03) {
-		int val=0;
 		switch(pin)
 		{
 			case 0:
 			case 1:
 			case 9:
 			case 23:
-			val = readl(pctrl->pins[pin].regs);
-			return val & 0x00000003;		
+			return reg_val & 0x00000003;
+			default:		
 			break;
 		
 		}
 	}		
 
-	return gpiod_get_value(gpio_to_desc(gpio));
+	if (!(reg_val & PADCFG0_GPIOTXDIS))
+		return !!(reg_val & PADCFG0_GPIOTXSTATE);
+
+	return !!(reg_val & PADCFG0_GPIORXSTATE);
 }
 
 static void upboard_gpio_set(struct gpio_chip *gc, unsigned int offset, int
@@ -1028,30 +1030,35 @@ static void upboard_gpio_set(struct gpio_chip *gc, unsigned int offset, int
 	struct upboard_pinctrl *pctrl = container_of(gc, struct upboard_pinctrl, chip);
 	unsigned int pin = pctrl->rpi_mapping[offset];
 	int gpio = upboard_rpi_to_native_gpio(gc, offset);
+	int reg_val=readl(pctrl->pins[pin].regs);;
 
 	if (gpio < 0)
 		return;
 
 	//APL03 board open drain GPIO
 	if(pctrl->ident == BOARD_UP_APL03) {
-		int val=0;
 		switch(pin)
 		{
 			case 0:
 			case 1:
 			case 9:
 			case 23:
-			val = readl(pctrl->pins[pin].regs);
 			if(value)
-				val |= PADCFG0_GPIOTXDIS;
+				reg_val |= PADCFG0_GPIOTXDIS;
 			else
-				val &= ~PADCFG0_GPIOTXDIS;
-			writel(val,pctrl->pins[pin].regs);			
+				reg_val &= ~PADCFG0_GPIOTXDIS;
+			writel(reg_val,pctrl->pins[pin].regs);	
+			return;
+			default:		
 			break;
 		
 		}
 	}	
-	gpiod_set_value(gpio_to_desc(gpio), value);
+	if (value)
+		reg_val |= PADCFG0_GPIOTXSTATE;
+	else
+		reg_val &= ~PADCFG0_GPIOTXSTATE;
+	writel(reg_val, pctrl->pins[pin].regs);
 }
 
 static int upboard_gpio_direction_input(struct gpio_chip *gc,
@@ -1060,7 +1067,6 @@ static int upboard_gpio_direction_input(struct gpio_chip *gc,
 	int gpio = upboard_rpi_to_native_gpio(gc, offset);
 	struct upboard_pinctrl *pctrl = container_of(gc, struct upboard_pinctrl, chip);
 	unsigned int pin = pctrl->rpi_mapping[offset];
-	//struct pinctrl_gpio_range *range = pinctrl_find_gpio_range_from_pin(pctrl->pctldev, pin);
 
 	upboard_fpga_set_direction(pctrl->pctldev,NULL,pin,true);
 	
@@ -1088,37 +1094,46 @@ static int upboard_gpio_direction_output(struct gpio_chip *gc,
 static void __iomem *upboard_get_regs(struct gpio_chip *gc, unsigned int gpio, unsigned int reg)
 {
 	struct platform_device *pdev = to_platform_device(gc->parent);
-	struct resource *res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	struct resource *res;
 	struct intel_pinctrl *pctrl = gpiochip_get_data(gc);
 	void __iomem *base=NULL;
 	int pin=gpio-gc->base;
 	
+	//out of tree build need to check intel_pinctrl struct
+	struct intel_pinctrl_n *pctrlN = gpiochip_get_data(gc);
+	int ncommunities=pctrl->ncommunities==0?pctrlN->ncommunities:pctrl->ncommunities;
+	
 	//check Intel pin controller for all platform
-	if(pctrl->ncommunities>1) {
-		int i,j;
-
-		pin = -1;
-		for (i = 0; i < pctrl->ncommunities; i++) {
-			struct intel_community *community = &pctrl->communities[i];
-			for(j=0;j<community->ngpps;j++)
+	int i,j;
+	pin = -1;
+	for (i = 0; i < ncommunities; i++) {
+		struct intel_community *community;
+		
+		//out of tree only
+		if(pctrl->ncommunities)
+		  community = &pctrl->communities[i];
+		else
+		  community = &pctrlN->communities[i];
+		  
+		for(j=0;j<community->ngpps;j++)
+		{
+			struct intel_padgroup gpps = community->gpps[j];
+			if(gpps.gpio_base == INTEL_GPIO_BASE_NOMAP) //skip no map
+				continue;
+			if(gpio < gc->base+gpps.gpio_base+gpps.size)
 			{
-				struct intel_padgroup gpps = community->gpps[j];
-				if(gpps.gpio_base == INTEL_GPIO_BASE_NOMAP) //skip no map
-					continue;
-				if(gpio < gc->base+gpps.gpio_base+gpps.size)
-				{
-					res = platform_get_resource(pdev, IORESOURCE_MEM, community->barno);
-					pin = gpio-gc->base-gpps.gpio_base+gpps.base-community->pin_base; 
-					//clear ACPI flag, BIOS should not set HAT pins ACPI flag on ADL platform
-					void __iomem *hostown = community->hostown_offset + gpps.reg_num * 4 + community->regs;
-					writel(readl(hostown)|BIT(gpio-gc->base-gpps.gpio_base),hostown);
-					break;
-				}
-			}
-			if(pin != -1)
+			        //get resource from bar number
+				res = platform_get_resource(pdev, IORESOURCE_MEM, community->barno);
+				pin = gpio-gc->base-gpps.gpio_base+gpps.base-community->pin_base; 
+				//clear ACPI flag, BIOS should not set HAT pins ACPI flag on ADL platform
+				void __iomem *hostown = community->hostown_offset + gpps.reg_num * 4 + community->regs;
+				writel(readl(hostown)|BIT(gpio-gc->base-gpps.gpio_base),hostown);
 				break;
+			}
 		}
-	}	
+		if(pin != -1)
+			break;
+	}
 
 	base = devm_ioremap(&pdev->dev, res->start, resource_size(res));
 
@@ -1160,6 +1175,7 @@ int upboard_acpi_node_pin_mapping(struct upboard_fpga *fpga,
 		pctrl->pins[i].gpio = desc_to_gpio(desc);
 		pctrl->pins[i].base = gc->base;
 		pctrl->pins[i].parent_irq = gpiod_to_irq(desc);
+
 		pctrl->pins[i].regs = upboard_get_regs(gc,desc_to_gpio(desc),PADCFG0);
 		
 		/* The GPIOs may not be contiguous, so add them 1-by-1 */
@@ -1167,14 +1183,12 @@ int upboard_acpi_node_pin_mapping(struct upboard_fpga *fpga,
 					     desc_to_gpio(desc)-gc->base,
 					     pin_offset+i, 1);
 		
-		if (ret)
-			return ret;
-	}
-
-	/* IRQ Setting */
-	for (i = 0; i < descs->ndescs; i++) {
+	        /* IRQ Setting after add pin*/
 		unsigned int p = pctrl->rpi_mapping[i];
 		pctrl->pins[p].irq = gpiod_to_irq(gpio_to_desc(i));
+
+		if (ret)
+			return ret;
 	}
 	
 	//dispose acpi resource
@@ -1196,7 +1210,7 @@ static struct gpio_chip upboard_gpio_chip = {
 	.owner = THIS_MODULE,
 };
 
-/* DMI Matches for older bios without fpga initialization */
+/* DMI Matches to assign pin mapping driver data */
 static const struct dmi_system_id upboard_dmi_table[] __initconst = {
 	{
 		.ident = BOARD_UP_APL03,
@@ -1365,43 +1379,43 @@ static struct irq_chip upboard_gpio_irqchip = {
 static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 {
 	struct upboard_fpga * const fpga = dev_get_drvdata(pdev->dev.parent);
-	struct acpi_device * const adev = ACPI_COMPANION(&pdev->dev);
 	struct pinctrl_desc *pctldesc;
 	struct upboard_pinctrl *pctrl;
 	struct upboard_pin *pins;
 	const struct dmi_system_id *system_id;
-	const char *hid;
 	const unsigned int *rpi_mapping;
 	unsigned ngpio;
 	int ret;
-	int i;
+	int i,board_id=BOARD_UP_APL03; //default
 
-	if (!fpga)
-		return -EINVAL;
-
-	if (!adev)
-		return -ENODEV;
-
-	//set pin desc and rpi GPIO mapping table by HID
-	hid = acpi_device_hid(adev);
-	if (!strcmp(hid, "AANT0F00") || !strcmp(hid, "AANT0F04") || !strcmp(hid, "AANT0000")) {
-		pctldesc = &upboard_up_pinctrl_desc;
-		rpi_mapping = upboard_up_rpi_mapping;
-		ngpio  = ARRAY_SIZE(upboard_up_rpi_mapping);
-	} else if (!strcmp(hid, "AANT0F01")) {
+	/* check board id to arrange driver data */
+	system_id = dmi_first_match(upboard_dmi_table);
+	if(system_id)
+		board_id = system_id->ident;
+	dev_info(&pdev->dev, "compatible upboard id %d",board_id);
+	switch(board_id)
+	{
+		case BOARD_UP_APL01:
 		pctldesc = &upboard_up2_pinctrl_desc;
 		rpi_mapping = upboard_up2_rpi_mapping;
 		ngpio  = ARRAY_SIZE(upboard_up2_rpi_mapping);
-	} else if (!strcmp(hid, "AANT0F02")) {
+		break;
+		case BOARD_UP_UPCORE:
 		pctldesc = &upboard_upcore_crex_pinctrl_desc;
 		rpi_mapping = upboard_upcore_crex_rpi_mapping;
 		ngpio  = ARRAY_SIZE(upboard_upcore_crex_rpi_mapping);
-	} else if (!strcmp(hid, "AANT0F03")) {
+		break;
+		case BOARD_UP_CORE_PLUS:
 		pctldesc = &upboard_upcore_crst02_pinctrl_desc;
 		rpi_mapping = upboard_upcore_crst02_rpi_mapping;
-		ngpio  = ARRAY_SIZE(upboard_upcore_crst02_rpi_mapping);
-	} else
-		return -ENODEV;
+		ngpio  = ARRAY_SIZE(upboard_upcore_crst02_rpi_mapping);	
+		break;
+		default:
+		pctldesc = &upboard_up_pinctrl_desc;
+		rpi_mapping = upboard_up_rpi_mapping;
+		ngpio  = ARRAY_SIZE(upboard_up_rpi_mapping);		
+		break;	
+	}
 
 	pctldesc->name = dev_name(&pdev->dev);
 
@@ -1466,6 +1480,7 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 	pctrl->chip.parent = &pdev->dev;
 	pctrl->chip.ngpio = ngpio;
 	pctrl->pins = pins;
+	pctrl->ident = board_id;
 	
 	/* Setup IRQ chip */
 	pctrl->chip.irq.handler = handle_edge_irq;
@@ -1487,14 +1502,6 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 					
 	if (ret)
 		return ret;
-	
-	/* check for special board versions that require register patches */
-	system_id = dmi_first_match(upboard_dmi_table);
-	if (system_id) {
-		pctrl->ident = system_id->ident;
-	}
-	else
-		pctrl->ident = BOARD_UP_APL03;
 
 	upboard_alt_func_enable(&pctrl->chip,"I2C",pctrl->ident);
 	upboard_alt_func_enable(&pctrl->chip,"SPI",pctrl->ident);
