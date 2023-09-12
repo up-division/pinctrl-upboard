@@ -66,21 +66,6 @@ then
     rm /lib/firmware/acpi-upgrades/pc00.i2c0.adc0.aml
 fi
 
-# mainly for Debian 12 need --force to replace exist pwm modules, but useful for others
-# check all installed kernel headers and install 
-for kernels in $(ls /boot/) ; do
-ver=$(echo $kernels | awk -F'vmlinuz-' '{print $2}')
-if [ ! -z "$ver" ]
-then
-for headers in $(ls /usr/src/) ; do
-head=$(echo $headers | awk -F'linux-headers-' '{print $2}')
-if [ "$head" = "$ver" ]
-then
-dkms install --force -m $1 -v $2 -k $ver > cmd.output
-fi
-done
-fi 
-done
 
 
 
