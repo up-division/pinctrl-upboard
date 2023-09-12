@@ -244,6 +244,20 @@ struct intel_pinctrl {
 	int irq;
 };
 
+//no irq chip definition
+struct intel_pinctrl_n {
+	struct device *dev;
+	raw_spinlock_t lock;
+	struct pinctrl_desc pctldesc;
+	struct pinctrl_dev *pctldev;
+	struct gpio_chip chip;
+	const struct intel_pinctrl_soc_data *soc;
+	struct intel_community *communities;
+	size_t ncommunities;
+	struct intel_pinctrl_context context;
+	int irq;
+};
+
 int intel_pinctrl_probe_by_hid(struct platform_device *pdev);
 int intel_pinctrl_probe_by_uid(struct platform_device *pdev);
 
