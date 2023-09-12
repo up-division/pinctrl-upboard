@@ -89,7 +89,7 @@
 #define BOARD_UP_CORE_PLUS  3
 #define BOARD_AIOT_IP6801   4
 #define BOARD_UP_WHL01      5
-#define BOARD_UP_ISH	     7
+#define BOARD_UP_ISH	    7
 #define BOARD_UPN_APL       8
 #define BOARD_UP_APL03      9
 #define BOARD_UPX_WHLite    10
@@ -1212,6 +1212,20 @@ static struct gpio_chip upboard_gpio_chip = {
 
 /* DMI Matches to assign pin mapping driver data */
 static const struct dmi_system_id upboard_dmi_table[] __initconst = {
+	{
+		.ident = BOARD_UP_APL01,
+		.matches = { /* UP SQUARED */
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UP-APL01"),
+		},		
+	},	
+	{
+		.ident = BOARD_UP_APL01,
+		.matches = { /* UP SQUARED Pro*/
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPN-APL01"),
+		},		
+	},	
 	{
 		.ident = BOARD_UP_APL03,
 		.matches = { /* UP 4000 */
