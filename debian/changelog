@@ -1,3 +1,10 @@
+pinctrl-upboard (1.1.2) stretch; urgency=medium
+
+  * fix debian 12 dkms installation 
+  * fix interrupt for mutliple gpio controller (EHL/APL)
+  * upstream modification 
+  
+ -- Gary Wang <garywang@aaeon.com.tw>  Tue, 12 Sep 2023 12:25:16 +0100
 pinctrl-upboard (1.1.1) stretch; urgency=medium
 
   * fix dkms message 
