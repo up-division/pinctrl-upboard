@@ -101,6 +101,7 @@
 #define BOARD_UPN_ADLN01    16
 #define BOARD_UPS_ADLP01    BOARD_UPX_ADLP01
 #define BOARD_UP_ADLN01     18
+#define BOARD_UP_COMMON     -1
 
 struct upboard_pin {
 	struct regmap_field *funcbit;
@@ -1011,7 +1012,7 @@ static int upboard_gpio_get(struct gpio_chip *gc, unsigned int offset)
 			case 1:
 			case 9:
 			case 23:
-			return reg_val & 0x00000003;
+			return reg_val & 0x00000100;
 			default:		
 			break;
 		
@@ -1400,7 +1401,7 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 	const unsigned int *rpi_mapping;
 	unsigned ngpio;
 	int ret;
-	int i,board_id=BOARD_UP_APL03; //default
+	int i,board_id=BOARD_UP_COMMON; //default
 
 	/* check board id to arrange driver data */
 	system_id = dmi_first_match(upboard_dmi_table);
@@ -1523,6 +1524,7 @@ static int __init upboard_pinctrl_probe(struct platform_device *pdev)
 	upboard_alt_func_enable(&pctrl->chip,"I2S",pctrl->ident);
 	upboard_alt_func_enable(&pctrl->chip,"PWM",pctrl->ident);
 	upboard_alt_func_enable(&pctrl->chip,"ADC",pctrl->ident);
+	upboard_alt_func_enable(&pctrl->chip,"PINMUX",pctrl->ident); //up2 i2c pinmux
 	
 	//pwm controller
 	switch(pctrl->ident)
