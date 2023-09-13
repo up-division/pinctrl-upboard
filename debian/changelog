@@ -2,9 +2,11 @@ pinctrl-upboard (1.1.2) stretch; urgency=medium
 
   * fix debian 12 dkms installation 
   * fix interrupt for mutliple gpio controller (EHL/APL)
+  * fix up4000 4 pins open drain GPIO read error
+  * fix up2/pro pin mux on i2c
   * upstream modification 
   
- -- Gary Wang <garywang@aaeon.com.tw>  Tue, 12 Sep 2023 12:25:16 +0100
+ -- Gary Wang <garywang@aaeon.com.tw>  Wed, 13 Sep 2023 10:33:58 +0100
 pinctrl-upboard (1.1.1) stretch; urgency=medium
 
   * fix dkms message 
