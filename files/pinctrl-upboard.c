@@ -1182,14 +1182,17 @@ int upboard_acpi_node_pin_mapping(struct upboard_fpga *fpga,
 		/* The GPIOs may not be contiguous, so add them 1-by-1 */
 		ret = gpiochip_add_pin_range(gpiod_to_chip(desc), pinctl_name,
 					     desc_to_gpio(desc)-gc->base,
-					     pin_offset+i, 1);
-		
-	        /* IRQ Setting after add pin*/
-		unsigned int p = pctrl->rpi_mapping[i];
-		pctrl->pins[p].irq = gpiod_to_irq(gpio_to_desc(i));
-
+					     pin_offset+i, 1);		
 		if (ret)
 			return ret;
+			
+	        /* HAT pin only, IRQ Setting after add pin*/
+	        if(i<28)
+	        {
+		    unsigned int p = pctrl->rpi_mapping[i];
+		    pctrl->pins[p].irq = gpiod_to_irq(gpio_to_desc(i));
+		}
+			
 	}
 	
 	//dispose acpi resource
