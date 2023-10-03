@@ -1,3 +1,9 @@
+pinctrl-upboard (1.1.3) stretch; urgency=medium
+
+  * fix up-apl01, upn-apl01 some pins interrupt not working 
+  * fix open drain gpio output state 
+    
+ -- Gary Wang <garywang@aaeon.com.tw>  Tue, 3 Oct 2023 14:02:37 +0100
 pinctrl-upboard (1.1.2) stretch; urgency=medium
 
   * fix debian 12 dkms installation 
