@@ -1012,7 +1012,8 @@ static int upboard_gpio_get(struct gpio_chip *gc, unsigned int offset)
 			case 1:
 			case 9:
 			case 23:
-			return reg_val & 0x00000100;
+			if (reg_val & 0x00000200)
+				return reg_val & 0x00000100;
 			default:		
 			break;
 		
@@ -1187,7 +1188,7 @@ int upboard_acpi_node_pin_mapping(struct upboard_fpga *fpga,
 			return ret;
 			
 	        /* HAT pin only, IRQ Setting after add pin*/
-	        if(i<28)
+	        if(i<pctrl->chip.ngpio)
 	        {
 		    unsigned int p = pctrl->rpi_mapping[i];
 		    pctrl->pins[p].irq = gpiod_to_irq(gpio_to_desc(i));
