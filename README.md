@@ -13,6 +13,7 @@ Supported products
 * UP Xtreme i12
 * UP Squared 6000
 * UP 4000
+* UP 7000
 * UP Element i12
 * UP Squared Pro 7000
 * UP Squared i12
@@ -32,7 +33,7 @@ Download the latest deb package from [the release folder](https://github.com/up-
 2. install deb package
 ------------------------
 ```
-sudo dpkg -i pinctrl-upboard_1.0.5_all.deb
+sudo dpkg -i pinctrl-upboard_1.1.3_all.deb
 ```
 Reboot the system again before starting to use the 40 pin header functionalities.
 
@@ -53,7 +54,7 @@ in pinctrl-upboard folder type following command
 debuild -i -us -uc
 ```
 
-build kernel modules
+build out of tree kernel modules
 ----------------------
 Developing/debug purpose or used on none Debian-based Linux distributions, please make sure you have installed linux header and build-essential,
 in pinctrl-upboard folder type following command
