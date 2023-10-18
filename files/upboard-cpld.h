@@ -20,6 +20,15 @@
 
 #define UPFPGA_READ_FLAG     (1 << UPFPGA_ADDRESS_SIZE)
 
+enum upcpld_ids {
+	AANT0000_ID = 255,
+	AANT0F00_ID = 0,
+	AANT0F01_ID = 1,
+	AANT0F02_ID = 2,
+	AANT0F03_ID = 3,
+	AANT0F04_ID = 4,
+};
+
 enum upboard_fpgareg {
 	UPFPGA_REG_PLATFORM_ID   = 0x10,
 	UPFPGA_REG_FIRMWARE_ID   = 0x11,
@@ -37,7 +46,7 @@ enum upboard_fpgareg {
 struct upboard_fpga {
 	struct device *dev;
 	struct regmap *regmap;
-	struct regmap_config *cpld_config;
+	//struct regmap_config *cpld_config;
 	struct gpio_desc *enable_gpio;
 	struct gpio_desc *reset_gpio;
 	struct gpio_desc *clear_gpio;
@@ -52,8 +61,8 @@ struct upboard_led_data {
 	const char *colour;
 };
 
-static int upboard_fpga_read(void *, unsigned int, unsigned int *);
-static int upboard_fpga_write(void *, unsigned int, unsigned int);
+static int upboard_cpld_read(void *, unsigned int, unsigned int *);
+static int upboard_cpld_write(void *, unsigned int, unsigned int);
 void upboard_pwm_register(void);
 
 #endif /*  __LINUX_MFD_UPBOARD_FPGA_H */
