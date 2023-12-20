@@ -13,7 +13,6 @@
 #include <linux/gpio/consumer.h>
 #include <linux/gpio/driver.h>
 #include <linux/interrupt.h>
-#include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/regmap.h>
@@ -41,47 +40,16 @@
 #define REVID_MASK			GENMASK(31, 16)
 #define PADBAR				0x00c
 
-/* Offset from pad_regs */
 #define PADCFG0			0x000
-#define PADCFG0_RXEVCFG_SHIFT		25
-#define PADCFG0_RXEVCFG_MASK		GENMASK(26, 25)
-#define PADCFG0_RXEVCFG_LEVEL		0
-#define PADCFG0_RXEVCFG_EDGE		1
-#define PADCFG0_RXEVCFG_DISABLED	2
-#define PADCFG0_RXEVCFG_EDGE_BOTH	3
-#define PADCFG0_PREGFRXSEL		BIT(24)
-#define PADCFG0_RXINV			BIT(23)
-#define PADCFG0_GPIROUTIOXAPIC	BIT(20)
-#define PADCFG0_GPIROUTSCI		BIT(19)
-#define PADCFG0_GPIROUTSMI		BIT(18)
-#define PADCFG0_GPIROUTNMI		BIT(17)
-#define PADCFG0_PMODE_SHIFT		10
-#define PADCFG0_PMODE_MASK		GENMASK(13, 10)
-#define PADCFG0_PMODE_GPIO		0
+#define PADCFG1			0x004
+#define PADCFG2			0x008
 #define PADCFG0_GPIORXDIS		BIT(9)
 #define PADCFG0_GPIOTXDIS		BIT(8)
 #define PADCFG0_GPIORXSTATE		BIT(1)
 #define PADCFG0_GPIOTXSTATE		BIT(0)
-
-#define PADCFG1			0x004
-#define PADCFG1_TERM_UP		BIT(13)
-#define PADCFG1_TERM_SHIFT		10
-#define PADCFG1_TERM_MASK		GENMASK(12, 10)
-#define PADCFG1_TERM_20K		BIT(2)
-#define PADCFG1_TERM_5K		BIT(1)
-#define PADCFG1_TERM_1K		BIT(0)
-#define PADCFG1_TERM_833		(BIT(1) | BIT(0))
-
-#define PADCFG2			0x008
-#define PADCFG2_DEBEN			BIT(0)
-#define PADCFG2_DEBOUNCE_SHIFT	1
-#define PADCFG2_DEBOUNCE_MASK		GENMASK(4, 1)
-
-#define DEBOUNCE_PERIOD_NSEC		31250
-
-/* Additional features supported by the hardware */
-#define PINCTRL_FEATURE_DEBOUNCE	BIT(0)
-#define PINCTRL_FEATURE_1K_PD		BIT(1)
+#define PADCFG0_PMODE_GPIO		0
+#define PADCFG0_PMODE_SHIFT		10
+#define PADCFG0_PMODE_MASK		GENMASK(13, 10)
 
 #define BOARD_UP_CHT01      0
 #define BOARD_UP_APL01      1
@@ -1395,7 +1363,7 @@ static struct irq_chip upboard_gpio_irqchip = {
 	.irq_set_type = upboard_irq_chip_set_type,
 };
 
-static int __init upboard_pinctrl_probe(struct platform_device *pdev)
+static int upboard_pinctrl_probe(struct platform_device *pdev)
 {
 	struct upboard_fpga * const fpga = dev_get_drvdata(pdev->dev.parent);
 	struct pinctrl_desc *pctldesc;

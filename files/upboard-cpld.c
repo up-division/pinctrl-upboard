@@ -11,9 +11,7 @@
  */
 
 #include <linux/acpi.h>
-#include <linux/dmi.h>
 #include <linux/gpio/consumer.h>
-#include <linux/kernel.h>
 #include <linux/leds.h>
 #include <linux/mfd/core.h>
 #include <linux/module.h>
@@ -169,10 +167,23 @@ static const struct mfd_cell upboard_up_mfd_cells[] = {
 	UPBOARD_LED_CELL(upboard_gpio_led_data, 0),
 };
 
+
+static const struct upboard_fpga_data upboard_up_fpga_data = {
+	.cpld_config = &upboard_up_regmap_config,
+	.cells = upboard_up_mfd_cells,
+	.ncells = ARRAY_SIZE(upboard_up_mfd_cells),
+};
+
 /* UP Squared 6000 EHL board */
 static const struct mfd_cell upboard_pinctrl_cells[] = {
 	{ .name = "upboard-pinctrl" },
 	UPBOARD_LED_CELL(upboard_gpio_led_data, 0),
+};
+
+static const struct upboard_fpga_data upboard_pinctrl_data = {
+	.cpld_config = &upboard_up_regmap_config,
+	.cells = upboard_pinctrl_cells,
+	.ncells = ARRAY_SIZE(upboard_pinctrl_cells),
 };
 
 /* UP^2 board */
@@ -228,7 +239,27 @@ static const struct mfd_cell upboard_up2_mfd_cells[] = {
 
 };
 
-static int __init upboard_cpld_gpio_init(struct upboard_fpga *fpga)
+static const struct upboard_fpga_data upboard_up2_fpga_data = {
+	.cpld_config = &upboard_up2_regmap_config,
+	.cells = upboard_up2_mfd_cells,
+	.ncells = ARRAY_SIZE(upboard_up2_mfd_cells),
+};
+
+/* UP-CREX carrier board for UP Core */
+
+/* same MAXV config as UP1 (proto2 release) */
+#define upboard_upcore_crex_fpga_data upboard_up_fpga_data
+
+/* UP-CRST02 carrier board for UP Core */
+
+/* same MAX10 config as UP2, but same LED cells as UP1 */
+static const struct upboard_fpga_data upboard_upcore_crst02_fpga_data = {
+	.cpld_config = &upboard_up2_regmap_config,
+	.cells = upboard_up_mfd_cells,
+	.ncells = ARRAY_SIZE(upboard_up_mfd_cells),
+};
+
+static int upboard_cpld_gpio_init(struct upboard_fpga *fpga)
 {
 	enum gpiod_flags flags = fpga->uninitialised ? GPIOD_OUT_LOW : GPIOD_ASIS;
 	
@@ -252,18 +283,6 @@ static int __init upboard_cpld_gpio_init(struct upboard_fpga *fpga)
 	if (IS_ERR(fpga->dataout_gpio))
 		return PTR_ERR(fpga->dataout_gpio);
 
-	/* The SoC pinctrl driver may not support reserving the GPIO line for
-	 * FPGA reset without causing an undesired reset pulse. This will clear
-	 * any settings on the FPGA, so only do it if we must.
-	 */
-	if (fpga->uninitialised) {
-		fpga->reset_gpio = devm_gpiod_get(fpga->dev, "reset", GPIOD_OUT_LOW);
-		if (IS_ERR(fpga->reset_gpio))
-			return PTR_ERR(fpga->reset_gpio);
-
-		gpiod_set_value(fpga->reset_gpio, 1);
-	}
-
 	gpiod_set_value(fpga->enable_gpio, 1);
 	fpga->uninitialised = false;
 
@@ -273,7 +292,7 @@ static int __init upboard_cpld_gpio_init(struct upboard_fpga *fpga)
 /*
  * This function is for debugging with user for showing firmware information.
  */
-static int __init upboard_fpga_show_firmware_info(struct upboard_fpga *fpga)
+static int upboard_fpga_show_firmware_info(struct upboard_fpga *fpga)
 {
 	unsigned int platform_id, manufacturer_id;
 	unsigned int firmware_id, build, major, minor, patch;
@@ -318,74 +337,33 @@ static int __init upboard_fpga_show_firmware_info(struct upboard_fpga *fpga)
 }
 
 static const struct acpi_device_id upboard_fpga_acpi_match[] = {
-	{ "AANT0000", AANT0000_ID },
-	{ "AANT0F00", AANT0F00_ID },
-	{ "AANT0F01", AANT0F01_ID },
-	{ "AANT0F02", AANT0F02_ID },
-	{ "AANT0F03", AANT0F03_ID },
-	{ "AANT0F04", AANT0F04_ID },
+	{ "AANT0F00", (kernel_ulong_t)&upboard_up_fpga_data },
+	{ "AANT0F01", (kernel_ulong_t)&upboard_up2_fpga_data },
+	{ "AANT0F02", (kernel_ulong_t)&upboard_upcore_crex_fpga_data },
+	{ "AANT0F03", (kernel_ulong_t)&upboard_upcore_crst02_fpga_data },
+	{ "AANT0F04", (kernel_ulong_t)&upboard_up_fpga_data },
 	{ }
 };
 MODULE_DEVICE_TABLE(acpi, upboard_fpga_acpi_match);
 
-static int __init upboard_fpga_probe(struct platform_device *pdev)
+static int upboard_fpga_probe(struct platform_device *pdev)
 {
 	struct upboard_fpga *fpga;
 	const struct acpi_device_id *id;
-	static const struct regmap_config *cpld_config;
-	static const struct mfd_cell *cells;
-	static size_t ncells;
+	const struct upboard_fpga_data *fpga_data;
 	int ret;
 
-	id = acpi_match_device(upboard_fpga_acpi_match, &pdev->dev);
-	if (!id)
+	fpga_data = device_get_match_data(&pdev->dev);
+	if (!fpga_data)
 		return -ENODEV;
 
-	switch(id->driver_data)
-	{
-		case AANT0F00_ID:
-		cpld_config = &upboard_up_regmap_config;
-		cells = upboard_up_mfd_cells;
-		ncells = ARRAY_SIZE(upboard_up_mfd_cells);
-		break;
-		case AANT0F01_ID:
-		cpld_config = &upboard_up2_regmap_config;
-		cells = upboard_up2_mfd_cells;
-		ncells = ARRAY_SIZE(upboard_up2_mfd_cells);
-		break;
-		case AANT0F02_ID:
-		cpld_config = &upboard_up_regmap_config;
-		cells = upboard_up_mfd_cells;
-		ncells = ARRAY_SIZE(upboard_up_mfd_cells);
-		break;
-		case AANT0F03_ID:
-		cpld_config = &upboard_up2_regmap_config;
-		cells = upboard_up_mfd_cells;
-		ncells = ARRAY_SIZE(upboard_up_mfd_cells);
-		break;
-		case AANT0F04_ID:
-		cpld_config = &upboard_up_regmap_config;
-		cells = upboard_up_mfd_cells;
-		ncells = ARRAY_SIZE(upboard_up_mfd_cells);
-		break;
-		case AANT0000_ID:
-		default:
-		cpld_config = &upboard_up_regmap_config;
-		cells = upboard_pinctrl_cells;
-		ncells = ARRAY_SIZE(upboard_pinctrl_cells);
-		break;
-	}
-	
 	fpga = devm_kzalloc(&pdev->dev, sizeof(*fpga), GFP_KERNEL);
 	if (!fpga)
 		return -ENOMEM;
 
-	//force init once
-	//fpga->uninitialised = true;
-
 	platform_set_drvdata(pdev, fpga);
 	fpga->dev = &pdev->dev;
-	fpga->regmap = devm_regmap_init(&pdev->dev, NULL, fpga, cpld_config);
+	fpga->regmap = devm_regmap_init(&pdev->dev, NULL, fpga, fpga_data->cpld_config);
 
 	if (IS_ERR(fpga->regmap))
 		return PTR_ERR(fpga->regmap);
@@ -393,8 +371,7 @@ static int __init upboard_fpga_probe(struct platform_device *pdev)
 	ret = upboard_cpld_gpio_init(fpga);
 	if (ret) {
 		/*
-		 * This is for compatiable with some upboards w/o FPGA firmware,
-		 * so just showing debug info and do not return directly.
+		 * just showing debug info and do not return directly.
 		 */
 		dev_warn(&pdev->dev, "Failed to initialize CPLD common GPIOs: %d", ret);
 	} else {
@@ -402,8 +379,8 @@ static int __init upboard_fpga_probe(struct platform_device *pdev)
 	}
 	
 	return devm_mfd_add_devices(&pdev->dev, PLATFORM_DEVID_AUTO,
-				    cells,
-				    ncells,
+				    fpga_data->cells,
+				    fpga_data->ncells,
 				    NULL, 0, NULL);
 }
 

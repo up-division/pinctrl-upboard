@@ -252,7 +252,7 @@ static struct gpio_chip upboard_ec_gpio_chip = {
 	.owner = THIS_MODULE,
 };
 
-static int __init upboard_pinctrl_probe(struct platform_device *pdev)
+static int upboard_pinctrl_probe(struct platform_device *pdev)
 {
 	struct upboard_ec * const ec = dev_get_drvdata(pdev->dev.parent);
 	struct acpi_device * const adev = ACPI_COMPANION(&pdev->dev);

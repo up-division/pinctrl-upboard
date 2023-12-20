@@ -261,7 +261,7 @@ static const struct acpi_device_id upboard_ec_acpi_match[] = {
 };
 MODULE_DEVICE_TABLE(acpi, upboard_ec_acpi_match);
 
-static int __init upboard_ec_probe(struct platform_device *pdev)
+static int upboard_ec_probe(struct platform_device *pdev)
 {
 	struct upboard_ec *ec;
 	const struct acpi_device_id *id;

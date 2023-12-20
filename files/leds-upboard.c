@@ -104,7 +104,7 @@ int upboard_led_gpio_register(struct upboard_fpga *fpga)
 	return devm_mfd_add_devices(fpga->dev, 0, upboard_gpio_led_cells,ARRAY_SIZE(upboard_gpio_led_cells), NULL, 0, NULL);
 }
 
-static int __init upboard_led_probe(struct platform_device *pdev)
+static int upboard_led_probe(struct platform_device *pdev)
 {
 	struct upboard_fpga * const fpga = dev_get_drvdata(pdev->dev.parent);
 	struct reg_field fldconf = {
