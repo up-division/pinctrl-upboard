@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * UP Board HAT pin controller driver
- * remapping native pin to RPI pin and set CPLD pin dir
+ * remapping native GPIO to RPI GPIO and set CPLD
  *
  * Copyright (c) AAEON. All rights reserved.
  *
@@ -35,22 +35,23 @@
 #endif
 
 /* Offset from regs */
-#define REVID				0x000
-#define REVID_SHIFT			16
-#define REVID_MASK			GENMASK(31, 16)
-#define PADBAR				0x00c
+#define REVID			0x000
+#define REVID_SHIFT		16
+#define REVID_MASK		GENMASK(31, 16)
+#define PADBAR			0x00c
 
 #define PADCFG0			0x000
 #define PADCFG1			0x004
 #define PADCFG2			0x008
-#define PADCFG0_GPIORXDIS		BIT(9)
-#define PADCFG0_GPIOTXDIS		BIT(8)
-#define PADCFG0_GPIORXSTATE		BIT(1)
-#define PADCFG0_GPIOTXSTATE		BIT(0)
-#define PADCFG0_PMODE_GPIO		0
-#define PADCFG0_PMODE_SHIFT		10
-#define PADCFG0_PMODE_MASK		GENMASK(13, 10)
+#define PADCFG0_GPIORXDIS	BIT(9)
+#define PADCFG0_GPIOTXDIS	BIT(8)
+#define PADCFG0_GPIORXSTATE	BIT(1)
+#define PADCFG0_GPIOTXSTATE	BIT(0)
+#define PADCFG0_PMODE_GPIO	0
+#define PADCFG0_PMODE_SHIFT	10
+#define PADCFG0_PMODE_MASK	GENMASK(13, 10)
 
+//board id
 #define BOARD_UP_CHT01      0
 #define BOARD_UP_APL01      1
 #define BOARD_UP_UPCORE     2

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * UP Board multi function device driver for control CPLD/FPGA to
- * provide more GPIO driving power also provide CPLD LEDs and pin mux function
- * recognize HID AANT0F00 ~ AAANT0F04 in ACPI name space
+ * UP Board multi function device driver
+ * CPLD provide more GPIO driving power and LEDs and pin mux function
+ * HID AANT0F00 ~ AAANT0F04 in ACPI name space
  *
  * Copyright (c) AAEON. All rights reserved.
  *
@@ -261,9 +261,9 @@ static const struct upboard_fpga_data upboard_upcore_crst02_fpga_data = {
 
 static int upboard_cpld_gpio_init(struct upboard_fpga *fpga)
 {
-	enum gpiod_flags flags = fpga->uninitialised ? GPIOD_OUT_LOW : GPIOD_ASIS;
+	//enum gpiod_flags flags = fpga->uninitialised ? GPIOD_OUT_LOW : GPIOD_ASIS;
 	
-	fpga->enable_gpio = devm_gpiod_get(fpga->dev, "enable", flags);
+	fpga->enable_gpio = devm_gpiod_get(fpga->dev, "enable", GPIOD_ASIS);
 	if (IS_ERR(fpga->enable_gpio))
 		return PTR_ERR(fpga->enable_gpio);
 
@@ -284,7 +284,7 @@ static int upboard_cpld_gpio_init(struct upboard_fpga *fpga)
 		return PTR_ERR(fpga->dataout_gpio);
 
 	gpiod_set_value(fpga->enable_gpio, 1);
-	fpga->uninitialised = false;
+	//fpga->uninitialised = false;
 
 	return 0;
 }
@@ -349,38 +349,34 @@ MODULE_DEVICE_TABLE(acpi, upboard_fpga_acpi_match);
 static int upboard_fpga_probe(struct platform_device *pdev)
 {
 	struct upboard_fpga *fpga;
-	const struct acpi_device_id *id;
-	const struct upboard_fpga_data *fpga_data;
 	int ret;
 
-	fpga_data = device_get_match_data(&pdev->dev);
-	if (!fpga_data)
-		return -ENODEV;
-
-	fpga = devm_kzalloc(&pdev->dev, sizeof(*fpga), GFP_KERNEL);
+	fpga = devm_kzalloc(&pdev->dev, sizeof(fpga), GFP_KERNEL);
 	if (!fpga)
 		return -ENOMEM;
 
+	fpga->fpga_data = device_get_match_data(&pdev->dev);
+	if (!fpga->fpga_data)
+		return -ENODEV;
+
 	platform_set_drvdata(pdev, fpga);
 	fpga->dev = &pdev->dev;
-	fpga->regmap = devm_regmap_init(&pdev->dev, NULL, fpga, fpga_data->cpld_config);
+	fpga->regmap = devm_regmap_init(&pdev->dev, NULL, fpga, fpga->fpga_data->cpld_config);
 
 	if (IS_ERR(fpga->regmap))
 		return PTR_ERR(fpga->regmap);
 
 	ret = upboard_cpld_gpio_init(fpga);
 	if (ret) {
-		/*
-		 * just showing debug info and do not return directly.
-		 */
+		// just showing debug info and do not return directly.
 		dev_warn(&pdev->dev, "Failed to initialize CPLD common GPIOs: %d", ret);
 	} else {
 		upboard_fpga_show_firmware_info(fpga);
 	}
 	
 	return devm_mfd_add_devices(&pdev->dev, PLATFORM_DEVID_AUTO,
-				    fpga_data->cells,
-				    fpga_data->ncells,
+				    fpga->fpga_data->cells,
+				    fpga->fpga_data->ncells,
 				    NULL, 0, NULL);
 }
 

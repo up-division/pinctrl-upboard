@@ -34,6 +34,12 @@ enum upboard_fpgareg {
 	UPFPGA_REG_MAX,
 };
 
+struct upboard_fpga_data {
+	struct regmap_config *cpld_config;
+	struct mfd_cell *cells;
+	size_t ncells;
+};
+
 struct upboard_fpga {
 	struct device *dev;
 	struct regmap *regmap;
@@ -43,14 +49,10 @@ struct upboard_fpga {
 	struct gpio_desc *strobe_gpio;
 	struct gpio_desc *datain_gpio;
 	struct gpio_desc *dataout_gpio;
-	bool uninitialised;
+//	bool uninitialised;
+	struct upboard_fpga_data *fpga_data;
 };
 
-struct upboard_fpga_data {
-	const struct regmap_config *cpld_config;
-	const struct mfd_cell *cells;
-	size_t ncells;
-};
 
 struct upboard_led_data {
 	unsigned int bit;

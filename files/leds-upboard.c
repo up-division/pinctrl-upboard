@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * UP Board CPLD/FPGA based LED driver
+ * UP Board CPLD/GPIO based LED driver
  *
  * Copyright (c) AAEON. All rights reserved.
  *
