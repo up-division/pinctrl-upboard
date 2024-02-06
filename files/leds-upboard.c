@@ -144,10 +144,10 @@ static struct platform_driver upboard_led_driver = {
 	.driver = {
 		.name = "upboard-led",
 	},
+	.probe = upboard_led_probe,
 };
 
-module_platform_driver_probe(upboard_led_driver, upboard_led_probe);
-
+module_platform_driver(upboard_led_driver);
 MODULE_AUTHOR("Gary Wang <garywang@aaeon.com.tw>");
 MODULE_DESCRIPTION("UP Board LED driver");
 MODULE_LICENSE("GPL v2");

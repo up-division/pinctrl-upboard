@@ -44,7 +44,7 @@
  */
 static int upboard_cpld_read(void *context, unsigned int reg, unsigned int *val)
 {
-	struct upboard_fpga * const fpga = context;
+	struct upboard_fpga *fpga = context;
 	int i;
 	
 	if (IS_ERR(fpga->clear_gpio))	//for none fpga boards
@@ -84,7 +84,7 @@ static int upboard_cpld_read(void *context, unsigned int reg, unsigned int *val)
  */
 static int upboard_cpld_write(void *context, unsigned int reg, unsigned int val)
 {
-	struct upboard_fpga * const fpga = context;
+	struct upboard_fpga *fpga = context;
 	int i;
 	
 	if (IS_ERR(fpga->clear_gpio))	//for none fpga boards
@@ -348,20 +348,21 @@ MODULE_DEVICE_TABLE(acpi, upboard_fpga_acpi_match);
 
 static int upboard_fpga_probe(struct platform_device *pdev)
 {
+	struct device *dev = &pdev->dev;	
 	struct upboard_fpga *fpga;
 	int ret;
 
-	fpga = devm_kzalloc(&pdev->dev, sizeof(*fpga), GFP_KERNEL);
+	fpga = devm_kzalloc(dev, sizeof(*fpga), GFP_KERNEL);
 	if (!fpga)
 		return -ENOMEM;
 
-	fpga->fpga_data = device_get_match_data(&pdev->dev);
+	fpga->fpga_data = device_get_match_data(dev);
 	if (!fpga->fpga_data)
 		return -ENODEV;
 
 	platform_set_drvdata(pdev, fpga);
-	fpga->dev = &pdev->dev;
-	fpga->regmap = devm_regmap_init(&pdev->dev, NULL, fpga, fpga->fpga_data->cpld_config);
+	fpga->dev = dev;
+	fpga->regmap = devm_regmap_init(dev, NULL, fpga, fpga->fpga_data->cpld_config);
 
 	if (IS_ERR(fpga->regmap))
 		return PTR_ERR(fpga->regmap);
@@ -369,12 +370,12 @@ static int upboard_fpga_probe(struct platform_device *pdev)
 	ret = upboard_cpld_gpio_init(fpga);
 	if (ret) {
 		// just showing debug info and do not return directly.
-		dev_warn(&pdev->dev, "Failed to initialize CPLD common GPIOs: %d", ret);
+		dev_warn(dev, "Failed to initialize CPLD common GPIOs: %d", ret);
 	} else {
 		upboard_fpga_show_firmware_info(fpga);
 	}
 	
-	return devm_mfd_add_devices(&pdev->dev, PLATFORM_DEVID_AUTO,
+	return devm_mfd_add_devices(dev, PLATFORM_DEVID_AUTO,
 				    fpga->fpga_data->cells,
 				    fpga->fpga_data->ncells,
 				    NULL, 0, NULL);
