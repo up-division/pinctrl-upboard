@@ -70,6 +70,8 @@
 #define BOARD_UPN_ADLN01    16
 #define BOARD_UPS_ADLP01    BOARD_UPX_ADLP01
 #define BOARD_UP_ADLN01     18
+#define BOARD_UPN_ASLH01    19
+#define BOARD_UPX_MTL01     20
 #define BOARD_UP_COMMON     -1
 
 struct upboard_pin {
@@ -795,6 +797,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 			{
 				case BOARD_UPN_ADLN01:
 				case BOARD_UPX_ADLP01:
+				case BOARD_UPN_ASLH01:
 					mode=2;
 				break;
 			}
@@ -813,6 +816,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 				case BOARD_UP_ADLN01:
 				case BOARD_UPN_ADLN01:
 				case BOARD_UPX_ADLP01:
+				case BOARD_UPN_ASLH01:
 					mode=2;
 				break;
 			}
@@ -827,6 +831,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 				case BOARD_UP_ADLN01:
 				case BOARD_UPN_ADLN01:
 				case BOARD_UPX_ADLP01:
+				case BOARD_UPN_ASLH01:
 					mode=7;
 					if(strstr(pctrl->pctldesc->pins[offset[i]].name,"MOSI"))
 					{
@@ -872,6 +877,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 				case BOARD_UPX_ADLP01:
 				case BOARD_UPN_ADLN01:
 				case BOARD_UP_ADLN01:
+				case BOARD_UPN_ASLH01:
 					mode=2;
 				break;	
 				default:
@@ -932,6 +938,7 @@ static int upboard_gpio_request(struct gpio_chip *gc, unsigned int offset)
 		return gpio;
 	upboard_fpga_request_enable(pctrl->pctldev,NULL,pin);	
 	return pinctrl_gpio_request(gpio);
+	//return gpio_request(gpio, module_name(THIS_MODULE));
 }
 
 static void upboard_gpio_free(struct gpio_chip *gc, unsigned int offset)
@@ -1263,6 +1270,20 @@ static const struct dmi_system_id upboard_dmi_table[] __initconst = {
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UP-ADLN01"),
 		},		
 	},
+	{
+		.ident = BOARD_UPN_ASLH01,
+		.matches = { 
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPN-ASLH01"),
+		},		
+	},
+	{
+		.ident = BOARD_UPN_ASLH01,
+		.matches = { 
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPN-EDGE-ASLH01"),
+		},		
+	},	
 	{ },
 };
 
@@ -1509,6 +1530,7 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 		case BOARD_UPX_ADLP01:
 		case BOARD_UPN_ADLN01:
 		case BOARD_UP_ADLN01:
+		case BOARD_UPN_ASLH01:
 			upboard_pwm_register();
 		break;	
 	}			
@@ -1520,11 +1542,13 @@ static struct platform_driver upboard_pinctrl_driver = {
 	.driver = {
 		.name = "upboard-pinctrl",
 	},
+	.probe = upboard_pinctrl_probe,
 };
 
-module_platform_driver_probe(upboard_pinctrl_driver, upboard_pinctrl_probe);
+//module_platform_driver_probe(upboard_pinctrl_driver, upboard_pinctrl_probe);
 
+module_platform_driver(upboard_pinctrl_driver);
 MODULE_AUTHOR("Gary Wang <garywang@aaeon.com.tw>");
 MODULE_DESCRIPTION("UP Board HAT pin controller driver");
 MODULE_LICENSE("GPL v2");
-MODULE_ALIAS("platform:upboard-pinctrl");
+//MODULE_ALIAS("platform:upboard-pinctrl");
