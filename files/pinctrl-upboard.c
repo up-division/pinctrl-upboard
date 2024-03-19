@@ -27,6 +27,7 @@
 #include "core.h"
 #include "pinctrl-intel.h"
 #include "pwm-lpss.h"
+#include "protos.h"
 
 //for older kernel lost DIRECTION_IN/OUT definition
 #ifndef GPIO_LINE_DIRECTION_IN
@@ -78,9 +79,9 @@ struct upboard_pin {
 	struct regmap_field *funcbit;
 	struct regmap_field *enbit;
 	struct regmap_field *dirbit;
-	unsigned int gpio;	//native pin controller number
-	unsigned int base;	//native pin controller base
-	int parent_irq;		//native pin controller irq
+	unsigned int gpio;	//native gpio number
+	unsigned int base;	//native gpio base
+	int parent_irq;		//native gpio irq
 	int irq;
 	void __iomem *regs; 
 };
@@ -937,8 +938,12 @@ static int upboard_gpio_request(struct gpio_chip *gc, unsigned int offset)
 	if (gpio < 0)
 		return gpio;
 	upboard_fpga_request_enable(pctrl->pctldev,NULL,pin);	
+	
+#if TYPES_NO_OFFSET==1
 	return pinctrl_gpio_request(gpio);
-	//return gpio_request(gpio, module_name(THIS_MODULE));
+#else
+	return pinctrl_gpio_request(gpiod_to_chip(gpio_to_desc(gpio)), gpio-pctrl->pins[pin].base);
+#endif
 }
 
 static void upboard_gpio_free(struct gpio_chip *gc, unsigned int offset)
@@ -950,7 +955,12 @@ static void upboard_gpio_free(struct gpio_chip *gc, unsigned int offset)
 	if (gpio < 0)
 		return;
 
+	
+#if TYPES_NO_OFFSET==1
 	pinctrl_gpio_free(gpio);
+#else
+	pinctrl_gpio_free(gpiod_to_chip(gpio_to_desc(gpio)), gpio-pctrl->pins[pin].base);
+#endif
 	upboard_alt_func_enable(gc,pctrl->pctldesc->pins[pin].name,pctrl->ident);
 }
 
@@ -1051,7 +1061,11 @@ static int upboard_gpio_direction_input(struct gpio_chip *gc,
 	if (gpio < 0)
 		return gpio;
 
+#if TYPES_NO_OFFSET==1
 	return pinctrl_gpio_direction_input(gpio);
+#else
+	return pinctrl_gpio_direction_input(gpiod_to_chip(gpio_to_desc(gpio)), gpio-pctrl->pins[pin].base);
+#endif
 }
 
 static int upboard_gpio_direction_output(struct gpio_chip *gc,
@@ -1065,8 +1079,11 @@ static int upboard_gpio_direction_output(struct gpio_chip *gc,
 
 	if (gpio < 0)
 		return gpio;
-
+#if TYPES_NO_OFFSET==1
 	return pinctrl_gpio_direction_output(gpio);
+#else
+	return pinctrl_gpio_direction_output(gpiod_to_chip(gpio_to_desc(gpio)), gpio-pctrl->pins[pin].base);
+#endif
 }
 
 static void __iomem *upboard_get_regs(struct gpio_chip *gc, unsigned int gpio, unsigned int reg)
@@ -1192,7 +1209,7 @@ static struct gpio_chip upboard_gpio_chip = {
 };
 
 /* DMI Matches to assign pin mapping driver data */
-static const struct dmi_system_id upboard_dmi_table[] __initconst = {
+static const struct dmi_system_id upboard_dmi_table[] = {
 	{
 		.ident = BOARD_UP_APL01,
 		.matches = { /* UP SQUARED */
@@ -1284,6 +1301,13 @@ static const struct dmi_system_id upboard_dmi_table[] __initconst = {
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPN-EDGE-ASLH01"),
 		},		
 	},	
+	{
+		.ident = BOARD_UPX_MTL01,
+		.matches = {
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPX-MTL01"),
+		},
+	},
 	{ },
 };
 
@@ -1531,7 +1555,10 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 		case BOARD_UPN_ADLN01:
 		case BOARD_UP_ADLN01:
 		case BOARD_UPN_ASLH01:
-			upboard_pwm_register();
+			upboard_pwm_register(0);
+		break;
+		case BOARD_UPX_MTL01:
+			upboard_pwm_register(1);
 		break;	
 	}			
 		
@@ -1545,10 +1572,8 @@ static struct platform_driver upboard_pinctrl_driver = {
 	.probe = upboard_pinctrl_probe,
 };
 
-//module_platform_driver_probe(upboard_pinctrl_driver, upboard_pinctrl_probe);
-
 module_platform_driver(upboard_pinctrl_driver);
 MODULE_AUTHOR("Gary Wang <garywang@aaeon.com.tw>");
 MODULE_DESCRIPTION("UP Board HAT pin controller driver");
 MODULE_LICENSE("GPL v2");
-//MODULE_ALIAS("platform:upboard-pinctrl");
+MODULE_ALIAS("platform:upboard-pinctrl");
