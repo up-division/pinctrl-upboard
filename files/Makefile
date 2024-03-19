@@ -45,9 +45,15 @@ modules_install:
 	
 # check kernel prototypes definition
 check_protos:
-	@echo "checking prototypes..." 
+	@echo "checking pwm prototypes..." 
 	rm -f ./protos.h
-	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_NO_ERROR_CODE 1" > protos.h || echo "#define TYPES_NO_ERROR_CODE 0" > protos.h )
+	rm -f ./protos.o
+	sed -i 's/#define CHECK_GPIO/#define CHECK_PWM/g' protos.c
+	make CFLAGS=-DCHECK_PWM=1 -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_NO_ERROR_CODE 1" > protos.h || echo "#define TYPES_NO_ERROR_CODE 0" > protos.h )
+	@echo "checking gpio prototypes..." 
+	rm -f ./protos.o
+	sed -i 's/#define CHECK_PWM/#define CHECK_GPIO/g' protos.c
+	make CFLAGS=-DCHECK_GPIO=1 -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_NO_OFFSET 1" >> protos.h || echo "#define TYPES_NO_OFFSET 0" >> protos.h )
 
 setup:
 	sh setup.sh
