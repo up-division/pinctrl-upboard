@@ -38,6 +38,15 @@ static struct resource pwm_res[] = {
 	},
 };
 
+static struct resource pwm_res1[] = {
+	{
+	.name = "upboard-pwmctrl",
+	.start = 0xE0D50304,
+	.end = 0xE0D50314,
+	.flags = IORESOURCE_MEM | IORESOURCE_MEM_WRITEABLE,
+	},
+};
+
 static struct pwm_lpss_boardinfo up_pwm_info = {
 	.clk_rate = 32768,
 	.npwm = 1,
@@ -154,7 +163,6 @@ static int upboard_pwm_get_state(struct pwm_chip *chip, struct pwm_device *pwm,
 static const struct pwm_ops pwm_lpss_ops = {
 	.apply = upboard_pwm_apply,
 	.get_state = upboard_pwm_get_state,
-	.owner = THIS_MODULE,
 };
 
 struct pwm_lpss_chip *upboard_pwm_probe(struct device *dev, struct resource *r,
@@ -205,7 +213,7 @@ upboard_pwm_exit(void)
 
 module_exit(upboard_pwm_exit);
 
-void upboard_pwm_register(void)
+void upboard_pwm_register(int res)
 {
 	up_pwm = platform_device_alloc("upboard-pwm", -1);
 	if (IS_ERR(up_pwm)) {
@@ -216,7 +224,7 @@ void upboard_pwm_register(void)
 		platform_device_unregister(up_pwm);	
 		return;
 	}			
-	if(IS_ERR(upboard_pwm_probe(&up_pwm->dev,pwm_res,&up_pwm_info))) {
+	if(IS_ERR(upboard_pwm_probe(&up_pwm->dev,res==0?pwm_res:pwm_res1,&up_pwm_info))) {
 		platform_device_unregister(up_pwm);
 		return;				
 	}
