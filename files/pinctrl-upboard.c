@@ -857,6 +857,9 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 						continue;
 					}
 				break;
+				case BOARD_UPX_MTL01:
+					mode=5;
+				break;
 			}
 		}
 		if(strstr(pctrl->pctldesc->pins[offset[i]].name,"I2S")){
@@ -879,6 +882,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 				case BOARD_UPN_ADLN01:
 				case BOARD_UP_ADLN01:
 				case BOARD_UPN_ASLH01:
+				case BOARD_UPX_MTL01:
 					mode=2;
 				break;	
 				default:
