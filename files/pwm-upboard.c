@@ -38,6 +38,7 @@ static struct resource pwm_res[] = {
 	},
 };
 
+//UP MTL
 static struct resource pwm_res1[] = {
 	{
 	.name = "upboard-pwmctrl",
@@ -177,7 +178,7 @@ struct pwm_lpss_chip *upboard_pwm_probe(struct device *dev, struct resource *r,
 	if (!lpwm)
 		return ERR_PTR(-ENOMEM);
 
-	lpwm->regs = devm_ioremap(&up_pwm->dev, pwm_res[0].start, resource_size(pwm_res));
+	lpwm->regs = devm_ioremap(&up_pwm->dev, r[0].start, resource_size(r));
 	if (IS_ERR(lpwm->regs))
 		return ERR_CAST(lpwm->regs);
 
