@@ -66,6 +66,12 @@ then
     rm /lib/firmware/acpi-upgrades/pc00.i2c0.adc0.aml
 fi
 
+if grep -q 'UPX-MTL01' /sys/class/dmi/id/board_name
+then
+    #remove pc00.i2c0 ASL, before update-initramfs
+    rm /lib/firmware/acpi-upgrades/pc00.i2c0.adc0.aml
+fi
+
 
 
 
