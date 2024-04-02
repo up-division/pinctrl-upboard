@@ -1079,6 +1079,9 @@ static int upboard_gpio_direction_output(struct gpio_chip *gc,
 	struct upboard_pinctrl *pctrl = container_of(gc, struct upboard_pinctrl, chip); 
 	unsigned int pin = pctrl->rpi_mapping[offset];
 
+	// Set the output value before changing the mode.
+	upboard_gpio_set(gc, offset, value);
+
 	upboard_fpga_set_direction(pctrl->pctldev,NULL,pin,false);
 
 	if (gpio < 0)
