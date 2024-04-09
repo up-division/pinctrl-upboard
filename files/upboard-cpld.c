@@ -337,6 +337,7 @@ static int upboard_fpga_show_firmware_info(struct upboard_fpga *fpga)
 }
 
 static const struct acpi_device_id upboard_fpga_acpi_match[] = {
+	{ "AANT0000", (kernel_ulong_t)&upboard_pinctrl_data },
 	{ "AANT0F00", (kernel_ulong_t)&upboard_up_fpga_data },
 	{ "AANT0F01", (kernel_ulong_t)&upboard_up2_fpga_data },
 	{ "AANT0F02", (kernel_ulong_t)&upboard_upcore_crex_fpga_data },
