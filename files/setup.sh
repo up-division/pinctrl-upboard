@@ -11,6 +11,21 @@ cp $SRC_DIR/acpi/acpi-upgrades /etc/initramfs-tools/hooks/
 cp $SRC_DIR/acpi/adc/*.aml $BASEHOOKSDIR
 cp $SRC_DIR/acpi/spi/*.aml $BASEHOOKSDIR
 
+#only for ASL user space SPI bus
+rm /lib/firmware/acpi-upgrades/pc00.spi0.spidev1.0.aml
+
+if grep -q 'UPN-APL01' /sys/class/dmi/id/board_name
+then
+    cp $SRC_DIR/acpi/spi/pc00.spi0.spidev1.0.aml $BASEHOOKSDIR	
+fi
+if grep -q 'UPN-EDGE-ASLH01' /sys/class/dmi/id/board_name
+then
+    cp $SRC_DIR/acpi/spi/pc00.spi0.spidev1.0.aml $BASEHOOKSDIR	
+fi    
+if grep -q 'UP-APL01' /sys/class/dmi/id/board_name
+then
+    rm /lib/firmware/acpi-upgrades/pci0.i2c3.adc0.aml
+fi
 if grep -q 'UPX-TGL01' /sys/class/dmi/id/board_name
 then
     #check blacklist
@@ -20,6 +35,8 @@ then
     else
         echo "blacklist gpio_aaeon" >> /etc/modprobe.d/blacklist.conf
     fi
+    rm /lib/firmware/acpi-upgrades/pc00.i2c0.adc0.aml
+    rm /lib/firmware/acpi-upgrades/pc00.i2c2.adc0.aml
 fi
 if grep -q 'UPN-EHL01' /sys/class/dmi/id/board_name
 then
@@ -30,7 +47,6 @@ then
     else
         echo "blacklist gpio_aaeon" >> /etc/modprobe.d/blacklist.conf
     fi
-    mkdir -p /lib/firmware/acpi-upgrades
     cp $SRC_DIR/acpi/acpi-upgrades /etc/initramfs-tools/hooks/
     cp $SRC_DIR/acpi/gpio/*.aml $BASEHOOKSDIR
     echo 'acpi files copied!'
@@ -44,7 +60,6 @@ then
     else
         echo "blacklist gpio_aaeon" >> /etc/modprobe.d/blacklist.conf
     fi
-    mkdir -p /lib/firmware/acpi-upgrades
     cp $SRC_DIR/acpi/acpi-upgrades /etc/initramfs-tools/hooks/
     cp $SRC_DIR/acpi/gpio/*.aml $BASEHOOKSDIR
     echo 'acpi files copied!'
@@ -64,6 +79,20 @@ if grep -q 'UP-ADLN01' /sys/class/dmi/id/board_name
 then
     #remove pc00.i2c0 ASL, before update-initramfs
     rm /lib/firmware/acpi-upgrades/pc00.i2c0.adc0.aml
+fi
+
+if grep -q 'UPS-ADLP01' /sys/class/dmi/id/board_name
+then
+    #remove pc00.i2c0 ASL, before update-initramfs
+    rm /lib/firmware/acpi-upgrades/pc00.i2c0.adc0.aml
+    rm /lib/firmware/acpi-upgrades/pc00.i2c2.adc0.aml  
+fi
+
+if grep -q 'UPX-ADLP01' /sys/class/dmi/id/board_name
+then
+    #remove pc00.i2c0 ASL, before update-initramfs
+    rm /lib/firmware/acpi-upgrades/pc00.i2c0.adc0.aml
+    rm /lib/firmware/acpi-upgrades/pc00.i2c2.adc0.aml  
 fi
 
 if grep -q 'UPX-MTL01' /sys/class/dmi/id/board_name
