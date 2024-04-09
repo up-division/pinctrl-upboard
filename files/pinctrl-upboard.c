@@ -776,7 +776,11 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 	struct upboard_pinctrl *pctrl = container_of(gc, struct upboard_pinctrl, chip);
 	int offset[pctrl->pctldesc->npins];
 	int i,cnt;
-	
+
+	//keep GPIO pin status
+	if (strstr(name, "GPIO"))
+		return;
+
 	//find all pins
 	for(i=0,cnt=0;i<pctrl->pctldesc->npins;i++){
 		if(strstr(pctrl->pctldesc->pins[i].name,name)){
