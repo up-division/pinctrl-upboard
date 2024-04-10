@@ -11,9 +11,11 @@ Supported products
 * UP Xtreme
 * UP Xtreme i11
 * UP Xtreme i12
+* UP Xtreme i14
 * UP Squared 6000
 * UP 4000
 * UP 7000
+* UP 7100
 * UP Element i12
 * UP Squared Pro 7000
 * UP Squared i12
