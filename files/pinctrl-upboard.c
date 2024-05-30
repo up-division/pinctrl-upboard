@@ -1313,6 +1313,13 @@ static const struct dmi_system_id upboard_dmi_table[] = {
 		},		
 	},	
 	{
+		.ident = BOARD_UPN_ASLH01,
+		.matches = { 
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPS-ASL01"),
+		},		
+	},		
+	{
 		.ident = BOARD_UPX_MTL01,
 		.matches = {
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
