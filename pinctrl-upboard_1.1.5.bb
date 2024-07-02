@@ -19,6 +19,9 @@ SRC_URI = "file://Makefile \
            file://pwm-lpss.h \
            file://pwm-lpss.c \
            file://pwm-lpss-pci.c \
+           file://spi-pxa2xx.c \
+           file://spi-pxa2xx.h \
+           file://spi-pxa2xx-dma.c \
            file://protos.c \
            file://COPYING \
           "

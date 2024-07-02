@@ -20,7 +20,17 @@ then
 fi
 if grep -q 'UPN-EDGE-ASLH01' /sys/class/dmi/id/board_name
 then
-    cp $SRC_DIR/acpi/spi/pc00.spi0.spidev1.0.aml $BASEHOOKSDIR	
+    rm $BASEHOOKSDIR/pc00.spi0.spidev1*
+    rm $BASEHOOKSDIR/pc00.spi1.spidev1*
+    rm $BASEHOOKSDIR/pc00.i2c0.adc0.aml
+    rm $BASEHOOKSDIR/pc00.i2c2.adc0.aml
+fi    
+if grep -q 'UPS-ASL01' /sys/class/dmi/id/board_name
+then
+    rm $BASEHOOKSDIR/pc00.spi0.spidev1*
+    rm $BASEHOOKSDIR/pc00.spi1.spidev1*
+    rm $BASEHOOKSDIR/pc00.i2c0.adc0.aml
+    rm $BASEHOOKSDIR/pc00.i2c2.adc0.aml
 fi    
 if grep -q 'UP-APL01' /sys/class/dmi/id/board_name
 then

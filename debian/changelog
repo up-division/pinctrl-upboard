@@ -1,3 +1,10 @@
+pinctrl-upboard (1.1.5) stretch; urgency=medium
+
+  * improve spi bus small data transfer
+  * add support UPS_ASL01
+  * fix UPX-MTL01 spi user space acpi
+  
+ -- Gary Wang <garywang@aaeon.com.tw>  Tue, 2 July 2024 14:06:36 +0100
 pinctrl-upboard (1.1.4) stretch; urgency=medium
 
   * add support kernel 6.7+ 
