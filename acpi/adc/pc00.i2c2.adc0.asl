@@ -3,9 +3,9 @@
  */
 DefinitionBlock ("", "SSDT", 1, "ALASKA", "ADC081C", 0x00000004)
 {
-    External (_SB_.PC00.I2C0, DeviceObj)
+    External (_SB_.PC00.I2C2, DeviceObj)
 
-    Scope (\_SB.PC00.I2C0)
+    Scope (\_SB.PC00.I2C2)
     {
         Device (ADC0)
         {
@@ -19,7 +19,7 @@ DefinitionBlock ("", "SSDT", 1, "ALASKA", "ADC081C", 0x00000004)
                         0x00, ResourceConsumer, , Exclusive,
                         )
                 })
-                Return (UBUF) /* \_SB_.PC00.I2C0.ADC0._CRS.UBUF */
+                Return (UBUF) /* \_SB_.PC00.I2C2.ADC0._CRS.UBUF */
             }
 
             Method (_STA, 0, NotSerialized)  // _STA: Status
