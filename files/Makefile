@@ -19,6 +19,8 @@ obj-m += pinctrl-upelement.o
 obj-m += pwm-upboard.o
 obj-m += pwm-lpss-pci.o
 obj-m += pwm-lpss.o
+spi-pxa2xx-platform-objs := spi-pxa2xx.o spi-pxa2xx-dma.o
+obj-m += spi-pxa2xx-platform.o
 obj-y += protos.o
 
 KVERSION := $(shell uname -r)
@@ -48,12 +50,16 @@ check_protos:
 	@echo "checking pwm prototypes..." 
 	rm -f ./protos.h
 	rm -f ./protos.o
-	sed -i 's/#define CHECK_GPIO/#define CHECK_PWM/g' protos.c
-	make CFLAGS=-DCHECK_PWM=1 -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_NO_ERROR_CODE 1" > protos.h || echo "#define TYPES_NO_ERROR_CODE 0" > protos.h )
+	sed -i 's/#define CHECK_SPI_NAMING/#define CHECK_PWM/g' protos.c
+	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_NO_ERROR_CODE 1" > protos.h || echo "#define TYPES_NO_ERROR_CODE 0" > protos.h )
 	@echo "checking gpio prototypes..." 
 	rm -f ./protos.o
 	sed -i 's/#define CHECK_PWM/#define CHECK_GPIO/g' protos.c
-	make CFLAGS=-DCHECK_GPIO=1 -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_NO_OFFSET 1" >> protos.h || echo "#define TYPES_NO_OFFSET 0" >> protos.h )
+	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_NO_OFFSET 1" >> protos.h || echo "#define TYPES_NO_OFFSET 0" >> protos.h )
+	@echo "checking spi naming..." 
+	rm -f ./protos.o
+	sed -i 's/#define CHECK_GPIO/#define CHECK_SPI_NAMING/g' protos.c
+	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_IS_SLAVE 1" >> protos.h || echo "#define TYPES_IS_SLAVE 0" >> protos.h )
 
 setup:
 	sh setup.sh
