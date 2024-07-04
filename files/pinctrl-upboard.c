@@ -73,7 +73,9 @@
 #define BOARD_UP_ADLN01     18
 #define BOARD_UPN_ASLH01    19
 #define BOARD_UPX_MTL01     20
-#define BOARD_UP_COMMON     -1
+
+#define STR_INDIRECTION(x) (const char*)#x
+#define STR_ID(x) STR_INDIRECTION(x)
 
 struct upboard_pin {
 	struct regmap_field *funcbit;
@@ -1222,105 +1224,105 @@ static struct gpio_chip upboard_gpio_chip = {
 /* DMI Matches to assign pin mapping driver data */
 static const struct dmi_system_id upboard_dmi_table[] = {
 	{
-		.ident = BOARD_UP_APL01,
+		.ident = STR_ID(BOARD_UP_APL01),
 		.matches = { /* UP SQUARED */
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UP-APL01"),
 		},		
 	},	
 	{
-		.ident = BOARD_UP_APL01,
+		.ident = STR_ID(BOARD_UP_APL01),
 		.matches = { /* UP SQUARED Pro*/
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPN-APL01"),
 		},		
 	},	
 	{
-		.ident = BOARD_UP_APL03,
+		.ident = STR_ID(BOARD_UP_APL03),
 		.matches = { /* UP 4000 */
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UP-APL03"),
 		},		
 	},	
 	{
-		.ident = BOARD_UP_WHL01,
+		.ident = STR_ID(BOARD_UP_WHL01),
 		.matches = { /* UPX WHL */
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UP-WHL01"),
 		},		
 	},		
 	{
-		.ident = BOARD_UPX_TGL,
+		.ident = STR_ID(BOARD_UPX_TGL),
 		.matches = { /* UP i11 */
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPX-TGL01"),
 		},		
 	},	
 	{
-		.ident = BOARD_UPN_EHL01,
+		.ident = STR_ID(BOARD_UPN_EHL01),
 		.matches = { /* UP 6000 */
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPN-EHL01"),
 		},		
 	},	
 	{
-		.ident = BOARD_UPS_EHL01,
+		.ident = STR_ID(BOARD_UPS_EHL01),
 		.matches = { /* UP squared v2 */
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPS-EHL01"),
 		},		
 	},		
 	{
-		.ident = BOARD_UPX_ADLP01,
+		.ident = STR_ID(BOARD_UPX_ADLP01),
 		.matches = { /* UP Xtreme i12 */
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPX-ADLP01"),
 		},		
 	},		
 	{
-		.ident = BOARD_UPN_ADLN01,
+		.ident = STR_ID(BOARD_UPN_ADLN01),
 		.matches = { /* UP 7000 */
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPN-ADLN01"),
 		},		
 	},
 	{
-		.ident = BOARD_UPS_ADLP01,
+		.ident = STR_ID(BOARD_UPS_ADLP01),
 		.matches = { /* UP Squared i12 */
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPS-ADLP01"),
 		},		
 	},					
 	{
-		.ident = BOARD_UP_ADLN01,
+		.ident = STR_ID(BOARD_UP_ADLN01),
 		.matches = { /* UP 7000 */
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UP-ADLN01"),
 		},		
 	},
 	{
-		.ident = BOARD_UPN_ASLH01,
+		.ident = STR_ID(BOARD_UPN_ASLH01),
 		.matches = { 
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPN-ASLH01"),
 		},		
 	},
 	{
-		.ident = BOARD_UPN_ASLH01,
+		.ident = STR_ID(BOARD_UPN_ASLH01),
 		.matches = { 
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPN-EDGE-ASLH01"),
 		},		
 	},	
 	{
-		.ident = BOARD_UPN_ASLH01,
+		.ident = STR_ID(BOARD_UPN_ASLH01),
 		.matches = { 
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPS-ASL01"),
 		},		
 	},		
 	{
-		.ident = BOARD_UPX_MTL01,
+		.ident = STR_ID(BOARD_UPX_MTL01),
 		.matches = {
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPX-MTL01"),
@@ -1437,13 +1439,14 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 	const unsigned int *rpi_mapping;
 	unsigned ngpio;
 	int ret;
-	int i,board_id=BOARD_UP_COMMON; //default
+	int i,board_id=BOARD_UP_ADLN01; //default
 
 	/* check board id to arrange driver data */
 	system_id = dmi_first_match(upboard_dmi_table);
 	if(system_id)
-		board_id = system_id->ident;
+	        ret = kstrtoul(system_id->ident, 10, (long *)&board_id);
 	dev_info(&pdev->dev, "compatible upboard id %d",board_id);
+	
 	switch(board_id)
 	{
 		case BOARD_UP_APL01:
