@@ -50,7 +50,7 @@ check_protos:
 	@echo "checking pwm prototypes..." 
 	rm -f ./protos.h
 	rm -f ./protos.o
-	sed -i 's/#define CHECK_SPI_NAMING/#define CHECK_PWM/g' protos.c
+	sed -i 's/#define CHECK_SPI_SSP/#define CHECK_PWM/g' protos.c
 	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_NO_ERROR_CODE 1" > protos.h || echo "#define TYPES_NO_ERROR_CODE 0" > protos.h )
 	@echo "checking gpio prototypes..." 
 	rm -f ./protos.o
@@ -60,6 +60,10 @@ check_protos:
 	rm -f ./protos.o
 	sed -i 's/#define CHECK_GPIO/#define CHECK_SPI_NAMING/g' protos.c
 	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_IS_SLAVE 1" >> protos.h || echo "#define TYPES_IS_SLAVE 0" >> protos.h )
+	@echo "checking spi ssp..." 
+	rm -f ./protos.o
+	sed -i 's/#define CHECK_SPI_NAMING/#define CHECK_SPI_SSP/g' protos.c
+	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_SSP_PDEV 1" >> protos.h || echo "#define TYPES_SSP_PDEV 0" >> protos.h )
 
 setup:
 	sh setup.sh

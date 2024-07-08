@@ -14,6 +14,31 @@
 
 #include <linux/pxa2xx_ssp.h>
 
+#ifndef __LINUX_PXA2XX_SSP_H
+/**
+ * pxa_ssp_read_reg - Read from a SSP register
+ *
+ * @dev: SSP device to access
+ * @reg: Register to read from
+ */
+
+static inline void pxa_ssp_enable(struct ssp_device *ssp)
+{
+	u32 sscr0;
+
+	sscr0 = pxa_ssp_read_reg(ssp, SSCR0) | SSCR0_SSE;
+	pxa_ssp_write_reg(ssp, SSCR0, sscr0);
+}
+
+static inline void pxa_ssp_disable(struct ssp_device *ssp)
+{
+	u32 sscr0;
+
+	sscr0 = pxa_ssp_read_reg(ssp, SSCR0) & ~SSCR0_SSE;
+	pxa_ssp_write_reg(ssp, SSCR0, sscr0);
+}
+#endif
+
 struct gpio_desc;
 struct pxa2xx_spi_controller;
 struct spi_controller;
@@ -21,6 +46,12 @@ struct spi_device;
 struct spi_transfer;
 
 struct driver_data {
+#ifndef __LINUX_PXA2XX_SSP_H
+	/* Driver model hookup */
+	struct device	*dev;
+#else
+	struct platform_device *pdev;
+#endif
 	/* SSP Info */
 	struct ssp_device *ssp;
 

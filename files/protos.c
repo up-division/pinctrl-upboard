@@ -7,7 +7,7 @@
  * Authors: Gary Wang <garywang@aaeon.com.tw>
  *
  */
-#define CHECK_SPI_NAMING
+#define CHECK_SPI_SSP
 
 #ifdef CHECK_PWM
 #include <linux/pwm.h>
@@ -39,6 +39,15 @@ void foo(void)
 	ctrl.is_slave=false;
 }
 #endif //CHECK_SPI_NAMING
+
+#ifdef CHECK_SPI_SSP
+#include <linux/spi/pxa2xx_spi.h>
+void foo(void)
+{
+	struct ssp_device ssp;
+	ssp.pdev = NULL;
+}
+#endif //CHECK_SPI_SSP
  
 #ifdef CHECK_PLATFORM_DRIVER
 #include <linux/platform_device.h>
