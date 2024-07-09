@@ -459,12 +459,31 @@ static void cs_deassert(struct spi_device *spi)
 		lpss_ssp_cs_control(spi, false);
 }
 
+
+//reduce up cs control latency
+#define UP_CS_CTRL 0x224
+#define UP_CS_SEL  8
+#define UP_CS_PINS 2
+static u32 up_cs_ctrl[UP_CS_PINS]; 
+static u8 up_cs;
 static void up_set_cs(struct spi_device *spi, bool level)
 {
+	struct driver_data *drv_data =
+		spi_controller_get_devdata(spi->controller);
+	//write cs out select & wait 2 ssp_clk cycles
+	if(up_cs != spi->chip_select)
+	{
+		const struct lpss_config *config = lpss_get_config(drv_data); 
+		lpss_ssp_select_cs(spi,config);
+		up_cs = spi->chip_select;
+	}
+	
 	if(level)
-		lpss_ssp_cs_control(spi, false);
+		up_cs_ctrl[up_cs] |= LPSS_CS_CONTROL_CS_HIGH;
 	else
-		lpss_ssp_cs_control(spi, true);
+		up_cs_ctrl[up_cs] &= ~LPSS_CS_CONTROL_CS_HIGH;
+
+	pxa2xx_spi_write(drv_data, UP_CS_CTRL, up_cs_ctrl[up_cs]);
 }
 
 static void pxa2xx_spi_set_cs(struct spi_device *spi, bool level)
@@ -1410,6 +1429,23 @@ static int setup(struct spi_device *spi)
 		chip->cr1 |= SSCR1_LBM;
 
 	spi_set_ctldata(spi, chip);
+	
+	//init up_cs control
+	lpss_ssp_select_cs(spi,config);
+	up_cs=spi->chip_select;
+	up_cs_ctrl[up_cs] = __lpss_ssp_read_priv(drv_data, config->reg_cs_ctrl);
+	//correct cs select
+	switch(up_cs)
+	{
+	case 0:
+	up_cs_ctrl[up_cs] &= ~(1 << UP_CS_SEL);  
+	break;
+	case 1:
+	up_cs_ctrl[up_cs] &= ~(1 << UP_CS_SEL);  
+	up_cs_ctrl[up_cs] |= (1 << UP_CS_SEL);  
+	break;
+	}
+	//dev_info(NULL,"up_cs:%d, up_cs_ctrl:%08x", up_cs, up_cs_ctrl[up_cs]);
 	
 	return 0;
 }
