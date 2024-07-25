@@ -41,13 +41,24 @@ void foo(void)
 #endif //CHECK_SPI_NAMING
 
 #ifdef CHECK_SPI_SSP
-#include <linux/spi/pxa2xx_spi.h>
+#include "pxa2xx_spi.h"
 void foo(void)
 {
 	struct ssp_device ssp;
 	ssp.pdev = NULL;
 }
 #endif //CHECK_SPI_SSP
+
+
+#ifdef CHECK_PWM_PDEV
+#include <linux/device.h>
+#include <linux/pwm.h>
+void foo(struct device *dev)
+{
+	struct pwm_chip chip;
+	chip.dev = dev;
+}
+#endif //CHECK_PWM_DEV_POINT
  
 #ifdef CHECK_PLATFORM_DRIVER
 #include <linux/platform_device.h>

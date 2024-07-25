@@ -188,7 +188,11 @@ struct pwm_lpss_chip *upboard_pwm_probe(struct device *dev, struct resource *r,
 	if (!c)
 		return ERR_PTR(-EINVAL);
 
+#if TYPES_PWM_PDEV==1
 	lpwm->chip.dev = dev;
+#else
+	lpwm->chip.dev = *dev;
+#endif
 	lpwm->chip.ops = &pwm_lpss_ops;
 	lpwm->chip.npwm = info->npwm;
 

@@ -73,8 +73,8 @@ static int pwm_lpss_wait_for_update(struct pwm_device *pwm)
 	 * enabled while we update the configuration.
 	 */
 	err = readl_poll_timeout(addr, val, !(val & PWM_SW_UPDATE), 40, ms);
-	if (err)
-		dev_err(pwm->chip->dev, "PWM_SW_UPDATE was not cleared\n");
+	//if (err)
+	//	dev_err(pwm->chip->dev, "PWM_SW_UPDATE was not cleared\n");
 
 	return err;
 }
@@ -82,7 +82,7 @@ static int pwm_lpss_wait_for_update(struct pwm_device *pwm)
 static inline int pwm_lpss_is_updating(struct pwm_device *pwm)
 {
 	if (pwm_lpss_read(pwm) & PWM_SW_UPDATE) {
-		dev_err(pwm->chip->dev, "PWM_SW_UPDATE is still set, skipping update\n");
+		//dev_err(pwm->chip->dev, "PWM_SW_UPDATE is still set, skipping update\n");
 		return -EBUSY;
 	}
 
@@ -158,16 +158,30 @@ static int pwm_lpss_apply(struct pwm_chip *chip, struct pwm_device *pwm,
 
 	if (state->enabled) {
 		if (!pwm_is_enabled(pwm)) {
+#if TYPES_PWM_PDEV==1
 			pm_runtime_get_sync(chip->dev);
+#else
+			pm_runtime_get_sync(&chip->dev);
+#endif
 			ret = pwm_lpss_prepare_enable(lpwm, pwm, state);
 			if (ret)
+			{
+#if TYPES_PWM_PDEV==1
 				pm_runtime_put(chip->dev);
+#eles
+				pm_runtime_put(&chip->dev);
+#endif
+			}
 		} else {
 			ret = pwm_lpss_prepare_enable(lpwm, pwm, state);
 		}
 	} else if (pwm_is_enabled(pwm)) {
 		pwm_lpss_write(pwm, pwm_lpss_read(pwm) & ~PWM_ENABLE);
+#if TYPES_PWM_PDEV==1
 		pm_runtime_put(chip->dev);
+#else
+		pm_runtime_put(&chip->dev);
+#endif
 	}
 
 	return ret;
@@ -186,8 +200,11 @@ static int pwm_lpss_get_state(struct pwm_chip *chip, struct pwm_device *pwm,
 	unsigned long long base_unit, freq, on_time_div;
 	u32 ctrl;
 
+#if TYPES_PWM_PDEV==1
 	pm_runtime_get_sync(chip->dev);
-
+#else
+	pm_runtime_get_sync(&chip->dev);
+#endif
 	base_unit_range = BIT(lpwm->info->base_unit_bits);
 
 	ctrl = pwm_lpss_read(pwm);
@@ -208,7 +225,11 @@ static int pwm_lpss_get_state(struct pwm_chip *chip, struct pwm_device *pwm,
 	state->polarity = PWM_POLARITY_NORMAL;
 	state->enabled = !!(ctrl & PWM_ENABLE);
 
+#if TYPES_PWM_PDEV==1
 	pm_runtime_put(chip->dev);
+#else
+	pm_runtime_put(&chip->dev);
+#endif
 	
 #if TYPES_NO_ERROR_CODE==0
 	return 0;
@@ -244,7 +265,11 @@ struct pwm_lpss_chip *upboard_pwm_lpss_probe(struct device *dev, void __iomem *b
 	if (!c)
 		return ERR_PTR(-EINVAL);
 
+#if TYPES_PWM_PDEV==1
 	lpwm->chip.dev = dev;
+#else
+	lpwm->chip.dev = *dev;
+#endif
 	lpwm->chip.ops = &pwm_lpss_ops;
 	lpwm->chip.npwm = info->npwm;
 

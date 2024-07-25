@@ -47,11 +47,15 @@ modules_install:
 	
 # check kernel prototypes definition
 check_protos:
-	@echo "checking pwm prototypes..." 
+	@echo "checking pwm dev struct..." 
 	rm -f ./protos.h
 	rm -f ./protos.o
-	sed -i 's/#define CHECK_SPI_SSP/#define CHECK_PWM/g' protos.c
-	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_NO_ERROR_CODE 1" > protos.h || echo "#define TYPES_NO_ERROR_CODE 0" > protos.h )
+	sed -i 's/#define CHECK_SPI_SSP/#define CHECK_PWM_PDEV/g' protos.c
+	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_PWM_PDEV 1" > protos.h || echo "#define TYPES_PWM_PDEV 0" > protos.h )
+	@echo "checking pwm prototypes..." 
+	rm -f ./protos.o
+	sed -i 's/#define CHECK_PWM_PDEV/#define CHECK_PWM/g' protos.c
+	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_NO_ERROR_CODE 1" >> protos.h || echo "#define TYPES_NO_ERROR_CODE 0" >> protos.h )
 	@echo "checking gpio prototypes..." 
 	rm -f ./protos.o
 	sed -i 's/#define CHECK_PWM/#define CHECK_GPIO/g' protos.c
