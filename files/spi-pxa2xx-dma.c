@@ -12,7 +12,11 @@
 #include <linux/scatterlist.h>
 #include <linux/sizes.h>
 
+#if TYPES_IS_SLAVE==1
 #include <linux/spi/pxa2xx_spi.h>
+#else
+#include "pxa2xx_spi.h"
+#endif
 #include <linux/spi/spi.h>
 
 #include "spi-pxa2xx.h"

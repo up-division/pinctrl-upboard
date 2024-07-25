@@ -27,7 +27,11 @@
 #include <linux/property.h>
 #include <linux/slab.h>
 
+#if TYPES_IS_SLAVE==1
 #include <linux/spi/pxa2xx_spi.h>
+#else
+#include "pxa2xx_spi.h"
+#endif
 #include <linux/spi/spi.h>
 
 #include "spi-pxa2xx.h"
@@ -475,7 +479,7 @@ static void up_set_cs(struct spi_device *spi, bool level)
 	{
 		const struct lpss_config *config = lpss_get_config(drv_data); 
 		lpss_ssp_select_cs(spi,config);
-		up_cs = spi->chip_select;
+		up_cs = (u32)spi->chip_select;
 	}
 	
 	if(level)
@@ -1075,13 +1079,13 @@ static int pxa2xx_spi_transfer_one(struct spi_controller *controller,
 	if (transfer->len > MAX_DMA_LEN && chip->enable_dma) {
 
 		/* Reject already-mapped transfers; PIO won't always work */
-		if (message->is_dma_mapped
-				|| transfer->rx_dma || transfer->tx_dma) {
-			dev_err(&spi->dev,
-				"Mapped transfer length of %u is greater than %d\n",
-				transfer->len, MAX_DMA_LEN);
-			return -EINVAL;
-		}
+		//if (message->is_dma_mapped
+		//		|| transfer->rx_dma || transfer->tx_dma) {
+		//	dev_err(&spi->dev,
+		//		"Mapped transfer length of %u is greater than %d\n",
+		//		transfer->len, MAX_DMA_LEN);
+		//	return -EINVAL;
+		//}
 
 		/* Warn ... we force this to PIO mode */
 		dev_warn_ratelimited(&spi->dev,
@@ -1432,7 +1436,7 @@ static int setup(struct spi_device *spi)
 	
 	//init up_cs control
 	lpss_ssp_select_cs(spi,config);
-	up_cs=spi->chip_select;
+	up_cs=(u32)spi->chip_select;
 	up_cs_ctrl[up_cs] = __lpss_ssp_read_priv(drv_data, config->reg_cs_ctrl);
 	//correct cs select
 	switch(up_cs)
