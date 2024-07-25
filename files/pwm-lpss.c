@@ -168,7 +168,7 @@ static int pwm_lpss_apply(struct pwm_chip *chip, struct pwm_device *pwm,
 			{
 #if TYPES_PWM_PDEV==1
 				pm_runtime_put(chip->dev);
-#eles
+#else
 				pm_runtime_put(&chip->dev);
 #endif
 			}
