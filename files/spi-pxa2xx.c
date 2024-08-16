@@ -27,6 +27,7 @@
 #include <linux/property.h>
 #include <linux/slab.h>
 
+#include "protos.h"
 #if TYPES_IS_SLAVE==1
 #include <linux/spi/pxa2xx_spi.h>
 #else
