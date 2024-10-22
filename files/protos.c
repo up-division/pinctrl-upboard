@@ -7,7 +7,7 @@
  * Authors: Gary Wang <garywang@aaeon.com.tw>
  *
  */
-#define CHECK_SPI_SSP
+#define CHECK_PLATFORM_DRIVER
 
 #ifdef CHECK_PWM
 #include <linux/pwm.h>

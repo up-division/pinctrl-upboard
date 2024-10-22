@@ -592,6 +592,21 @@ static unsigned int upboard_upcore_crex_rpi_mapping[] = {
 #define upboard_upcore_crst02_rpi_mapping upboard_upcore_crex_rpi_mapping
 
 
+struct upboard_cs {
+        struct upboard_pin *cs;
+        int val;
+};
+static struct upboard_cs cs_pins[2];
+void upboard_set_cs(u8 cs,bool level)
+{
+	if (level)
+		cs_pins[cs].val |= PADCFG0_GPIOTXSTATE;
+	else
+		cs_pins[cs].val &= ~PADCFG0_GPIOTXSTATE;
+	writel(cs_pins[cs].val, cs_pins[cs].cs->regs);   
+}
+EXPORT_SYMBOL_GPL(upboard_set_cs);
+
 static int upboard_set_mux(struct pinctrl_dev *pctldev, unsigned int function,
 			   unsigned int group)
 {
@@ -856,11 +871,12 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 					}
 					if(strstr(pctrl->pctldesc->pins[offset[i]].name,"CS0"))
 					{
-						val |= PADCFG0_GPIORXDIS;
+						//val |= PADCFG0_GPIORXDIS;
+						mode = 0;
 					}
 					if(strstr(pctrl->pctldesc->pins[offset[i]].name,"CS1"))
 					{
-						continue;
+						mode = 0;
 					}
 				break;
 				case BOARD_UPX_MTL01:
@@ -1028,7 +1044,7 @@ static void upboard_gpio_set(struct gpio_chip *gc, unsigned int offset, int
 	struct upboard_pinctrl *pctrl = container_of(gc, struct upboard_pinctrl, chip);
 	unsigned int pin = pctrl->rpi_mapping[offset];
 	int gpio = upboard_rpi_to_native_gpio(gc, offset);
-	int reg_val=readl(pctrl->pins[pin].regs);;
+	int reg_val=readl(pctrl->pins[pin].regs);
 
 	if (gpio < 0)
 		return;
@@ -1185,7 +1201,7 @@ int upboard_acpi_node_pin_mapping(struct upboard_fpga *fpga,
 		pctrl->pins[i].parent_irq = gpiod_to_irq(desc);
 
 		pctrl->pins[i].regs = upboard_get_regs(gc,desc_to_gpio(desc),PADCFG0);
-		
+
 		/* The GPIOs may not be contiguous, so add them 1-by-1 */
 		ret = gpiochip_add_pin_range(gpiod_to_chip(desc), pinctl_name,
 					     desc_to_gpio(desc)-gc->base,
@@ -1205,6 +1221,13 @@ int upboard_acpi_node_pin_mapping(struct upboard_fpga *fpga,
 	//dispose acpi resource
 	devm_gpiod_put_array(fpga->dev,descs);
 
+        //set cs pin
+        cs_pins[0].cs = &pctrl->pins[21];
+        cs_pins[0].val = readl(pctrl->pins[21].regs);  
+        cs_pins[1].cs = &pctrl->pins[22];
+        cs_pins[1].val = readl(pctrl->pins[22].regs);
+        dev_info(fpga->dev,"cs0:%d, val:%08X",cs_pins[0].cs->gpio,cs_pins[0].val);
+        dev_info(fpga->dev,"cs1:%d, val:%08X",cs_pins[1].cs->gpio,cs_pins[1].val);
 	return ret;
 }
 

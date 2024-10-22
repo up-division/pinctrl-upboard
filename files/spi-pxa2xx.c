@@ -464,31 +464,11 @@ static void cs_deassert(struct spi_device *spi)
 		lpss_ssp_cs_control(spi, false);
 }
 
-
-//reduce up cs control latency
-#define UP_CS_CTRL 0x224
-#define UP_CS_SEL  8
-#define UP_CS_PINS 2
-static u32 up_cs_ctrl[UP_CS_PINS]; 
-static u8 up_cs;
+//cs pins call from pinctrl
+void upboard_set_cs(u8 cs,bool level);
 static void up_set_cs(struct spi_device *spi, bool level)
 {
-	struct driver_data *drv_data =
-		spi_controller_get_devdata(spi->controller);
-	//write cs out select & wait 2 ssp_clk cycles
-	if(up_cs != spi->chip_select)
-	{
-		const struct lpss_config *config = lpss_get_config(drv_data); 
-		lpss_ssp_select_cs(spi,config);
-		up_cs = (u32)spi->chip_select;
-	}
-	
-	if(level)
-		up_cs_ctrl[up_cs] |= LPSS_CS_CONTROL_CS_HIGH;
-	else
-		up_cs_ctrl[up_cs] &= ~LPSS_CS_CONTROL_CS_HIGH;
-
-	pxa2xx_spi_write(drv_data, UP_CS_CTRL, up_cs_ctrl[up_cs]);
+        upboard_set_cs(*spi->chip_select,level);
 }
 
 static void pxa2xx_spi_set_cs(struct spi_device *spi, bool level)
@@ -1000,7 +980,7 @@ static int up_spi_transfer(struct driver_data *drv_data,
 {
 	u32 nbuf=0;
 	u32 clk_div = pxa2xx_ssp_get_clk_div(drv_data, transfer->speed_hz);
-	u32 len=transfer->len,cnt;
+	u32 len,cnt;
 		
 	drv_data->tx = transfer->tx_buf;
 	drv_data->tx_end = drv_data->tx + transfer->len;
@@ -1017,7 +997,7 @@ static int up_spi_transfer(struct driver_data *drv_data,
 		drv_data->n_bytes = 4;
 		ReadVal = u32value;
 	}
-	
+	len = transfer->len/drv_data->n_bytes;
 	//SSCR0
 	pxa2xx_spi_write(drv_data, SSCR0, pxa2xx_configure_sscr0(drv_data, 
 	clk_div, transfer->bits_per_word) | SSCR0_SSE );
@@ -1138,7 +1118,8 @@ static int pxa2xx_spi_transfer_one(struct spi_controller *controller,
 
 	dma_mapped = controller->can_dma &&
 		     controller->can_dma(controller, spi, transfer) &&
-		     controller->cur_msg_mapped;
+		     (transfer->tx_sg_mapped || transfer->rx_sg_mapped);
+		     //controller->cur_msg_mapped;
 	if (dma_mapped) {
 
 		/* Ensure we have the correct interrupt handler */
@@ -1435,23 +1416,6 @@ static int setup(struct spi_device *spi)
 
 	spi_set_ctldata(spi, chip);
 	
-	//init up_cs control
-	lpss_ssp_select_cs(spi,config);
-	up_cs=(u32)spi->chip_select;
-	up_cs_ctrl[up_cs] = __lpss_ssp_read_priv(drv_data, config->reg_cs_ctrl);
-	//correct cs select
-	switch(up_cs)
-	{
-	case 0:
-	up_cs_ctrl[up_cs] &= ~(1 << UP_CS_SEL);  
-	break;
-	case 1:
-	up_cs_ctrl[up_cs] &= ~(1 << UP_CS_SEL);  
-	up_cs_ctrl[up_cs] |= (1 << UP_CS_SEL);  
-	break;
-	}
-	//dev_info(NULL,"up_cs:%d, up_cs_ctrl:%08x", up_cs, up_cs_ctrl[up_cs]);
-	
 	return 0;
 }
 
@@ -1697,6 +1661,7 @@ pxa2xx_spi_init_pdata(struct platform_device *pdev)
 static int pxa2xx_spi_fw_translate_cs(struct spi_controller *controller,
 				      unsigned int cs)
 {
+#if 0
 	struct driver_data *drv_data = spi_controller_get_devdata(controller);
 #ifndef __LINUX_PXA2XX_SSP_H
 	if (has_acpi_companion(drv_data->dev)) {
@@ -1719,6 +1684,23 @@ static int pxa2xx_spi_fw_translate_cs(struct spi_controller *controller,
 	}
 
 	return cs;
+#else
+	struct driver_data *drv_data = spi_controller_get_devdata(controller);
+
+	switch (drv_data->ssp_type) {
+	/*
+	 * For some of Intel Atoms the ACPI DeviceSelection used by the Windows
+	 * driver starts from 1 instead of 0 so translate it here to match what
+	 * Linux expects.
+	 */
+	case LPSS_BYT_SSP:
+	case LPSS_BSW_SSP:
+		return cs - 1;
+
+	default:
+		return cs;
+	}
+#endif
 }
 
 static size_t pxa2xx_spi_max_dma_transfer_size(struct spi_device *spi)
@@ -1798,7 +1780,7 @@ static int pxa2xx_spi_probe(struct platform_device *pdev)
 	controller->slave_abort = pxa2xx_spi_slave_abort;
 	controller->handle_err = pxa2xx_spi_handle_err;
 	//controller->unprepare_transfer_hardware = pxa2xx_spi_unprepare_transfer;
-	controller->fw_translate_cs = pxa2xx_spi_fw_translate_cs;
+	//controller->fw_translate_cs = pxa2xx_spi_fw_translate_cs;
 	controller->auto_runtime_pm = true;
 	controller->flags = SPI_CONTROLLER_MUST_RX | SPI_CONTROLLER_MUST_TX;
 
@@ -1925,7 +1907,7 @@ static int pxa2xx_spi_probe(struct platform_device *pdev)
 			platform_info->num_chipselect = config->cs_num;
 		}
 	}
-	controller->num_chipselect = platform_info->num_chipselect;
+	controller->num_chipselect = 2;//platform_info->num_chipselect;
 	controller->use_gpio_descriptors = true;
 
 #if TYPES_IS_SLAVE==1
@@ -1971,7 +1953,11 @@ out_error_controller_alloc:
 	return status;
 }
 
+#if TYPES_PLATFORM_REMOVE_NEW==0
 static int pxa2xx_spi_remove(struct platform_device *pdev)
+#else
+static void pxa2xx_spi_remove(struct platform_device *pdev)
+#endif
 {
 	struct driver_data *drv_data = platform_get_drvdata(pdev);
 	struct ssp_device *ssp = drv_data->ssp;
@@ -1997,7 +1983,9 @@ static int pxa2xx_spi_remove(struct platform_device *pdev)
 	/* Release SSP */
 	pxa_ssp_free(ssp);
 
+#if TYPES_PLATFORM_REMOVE_NEW==0
 	return 0;
+#endif
 }
 
 #ifdef CONFIG_PM_SLEEP
