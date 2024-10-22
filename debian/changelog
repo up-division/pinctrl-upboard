@@ -1,3 +1,10 @@
+pinctrl-upboard (1.1.6) stretch; urgency=medium
+
+  * add support kernel 6.11+
+  * fix 2 cs pin support for all up boards
+  * rename spi driver to spi-pxa2xx-up
+  
+ -- Gary Wang <garywang@aaeon.com.tw>  Wed, 30 Oct 2024 13:56:21 +0100
 pinctrl-upboard (1.1.5) stretch; urgency=medium
 
   * improve spi bus small data transfer
