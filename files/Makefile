@@ -19,8 +19,8 @@ obj-m += pinctrl-upelement.o
 obj-m += pwm-upboard.o
 obj-m += pwm-lpss-pci.o
 obj-m += pwm-lpss.o
-spi-pxa2xx-platform-objs := spi-pxa2xx.o spi-pxa2xx-dma.o
-obj-m += spi-pxa2xx-platform.o
+spi-pxa2xx-up-objs := spi-pxa2xx.o spi-pxa2xx-dma.o
+obj-m += spi-pxa2xx-up.o
 obj-y += protos.o
 
 KVERSION := $(shell uname -r)
@@ -50,7 +50,7 @@ check_protos:
 	@echo "checking pwm dev struct..." 
 	rm -f ./protos.h
 	rm -f ./protos.o
-	sed -i 's/#define CHECK_SPI_SSP/#define CHECK_PWM_PDEV/g' protos.c
+	sed -i 's/#define CHECK_PLATFORM_DRIVER/#define CHECK_PWM_PDEV/g' protos.c
 	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_PWM_PDEV 1" > protos.h || echo "#define TYPES_PWM_PDEV 0" > protos.h )
 	@echo "checking pwm prototypes..." 
 	rm -f ./protos.o
@@ -68,6 +68,11 @@ check_protos:
 	rm -f ./protos.o
 	sed -i 's/#define CHECK_SPI_NAMING/#define CHECK_SPI_SSP/g' protos.c
 	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_SSP_PDEV 1" >> protos.h || echo "#define TYPES_SSP_PDEV 0" >> protos.h )
+	@echo "checking platform driver..." 
+	rm -f ./protos.o
+	sed -i 's/#define CHECK_SPI_SSP/#define CHECK_PLATFORM_DRIVER/g' protos.c
+	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_PLATFORM_REMOVE_NEW 1" >> protos.h || echo "#define TYPES_PLATFORM_REMOVE_NEW 0" >> protos.h )
+
 
 setup:
 	sh setup.sh
