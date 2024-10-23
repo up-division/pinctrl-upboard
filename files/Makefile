@@ -68,9 +68,13 @@ check_protos:
 	rm -f ./protos.o
 	sed -i 's/#define CHECK_SPI_NAMING/#define CHECK_SPI_SSP/g' protos.c
 	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_SSP_PDEV 1" >> protos.h || echo "#define TYPES_SSP_PDEV 0" >> protos.h )
+	@echo "checking spi chip select..." 
+	rm -f ./protos.o
+	sed -i 's/#define CHECK_SPI_SSP/#define CHECK_SPI_CHIP_SELECT/g' protos.c
+	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_SPI_CS_INT 0" >> protos.h || echo "#define TYPES_SPI_CS_INT 1" >> protos.h )	
 	@echo "checking platform driver..." 
 	rm -f ./protos.o
-	sed -i 's/#define CHECK_SPI_SSP/#define CHECK_PLATFORM_DRIVER/g' protos.c
+	sed -i 's/#define CHECK_SPI_CHIP_SELECT/#define CHECK_PLATFORM_DRIVER/g' protos.c
 	make -i -C $(KERNEL_SRC) M=$(PWD) protos.o; ([ -f protos.o ] && echo "#define TYPES_PLATFORM_REMOVE_NEW 1" >> protos.h || echo "#define TYPES_PLATFORM_REMOVE_NEW 0" >> protos.h )
 
 

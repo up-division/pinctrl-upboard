@@ -12,7 +12,7 @@ cp $SRC_DIR/acpi/adc/*.aml $BASEHOOKSDIR
 cp $SRC_DIR/acpi/spi/*.aml $BASEHOOKSDIR
 
 #only for ASL user space SPI bus
-rm /lib/firmware/acpi-upgrades/pc00.spi0.spidev1.0.aml
+#rm /lib/firmware/acpi-upgrades/pc00.spi0.spidev1.0.aml
 
 #gpio blacklist check
 if grep -q 'blacklist gpio_aaeon' /etc/modprobe.d/blacklist.conf
@@ -22,11 +22,17 @@ else
     echo "blacklist gpio_aaeon" >> /etc/modprobe.d/blacklist.conf
 fi
 #spi blacklist check
-if grep -q 'blacklist spi-pxa2xx-platform' /etc/modprobe.d/blacklist.conf
+if grep -q 'blacklist spi_pxa2xx_platform' /etc/modprobe.d/blacklist.conf
 then
-    echo "blacklist spi-pxa2xx-platform exist"
+    echo "blacklist spi_pxa2xx_platform exist"
 else
-    echo "blacklist spi-pxa2xx-platform" >> /etc/modprobe.d/blacklist.conf
+    echo "blacklist spi_pxa2xx_platform" >> /etc/modprobe.d/blacklist.conf
+fi
+if grep -q 'blacklist spi_pxa2xx_core' /etc/modprobe.d/blacklist.conf
+then
+    echo "blacklist spi_pxa2xx_core exist"
+else
+    echo "blacklist spi_pxa2xx_core" >> /etc/modprobe.d/blacklist.conf
 fi
 
 #up boards setting    
@@ -95,7 +101,4 @@ then
     #remove pc00.i2c0 ASL, before update-initramfs
     rm /lib/firmware/acpi-upgrades/pc00.i2c0.adc0.aml
 fi
-
-
-
 
