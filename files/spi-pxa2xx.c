@@ -468,7 +468,11 @@ static void cs_deassert(struct spi_device *spi)
 void upboard_set_cs(u8 cs,bool level);
 static void up_set_cs(struct spi_device *spi, bool level)
 {
+#if TYPES_SPI_CS_INT==0
         upboard_set_cs(*spi->chip_select,level);
+#else
+        upboard_set_cs(spi->chip_select,level);
+#endif
 }
 
 static void pxa2xx_spi_set_cs(struct spi_device *spi, bool level)
@@ -1118,8 +1122,11 @@ static int pxa2xx_spi_transfer_one(struct spi_controller *controller,
 
 	dma_mapped = controller->can_dma &&
 		     controller->can_dma(controller, spi, transfer) &&
+#if TYPES_PLATFORM_REMOVE_NEW==0
+		     controller->cur_msg_mapped;
+#else
 		     (transfer->tx_sg_mapped || transfer->rx_sg_mapped);
-		     //controller->cur_msg_mapped;
+#endif
 	if (dma_mapped) {
 
 		/* Ensure we have the correct interrupt handler */
@@ -1623,7 +1630,7 @@ pxa2xx_spi_init_pdata(struct platform_device *pdev)
 	ssp->phys_base = res->start;
 
 #ifdef CONFIG_PCI
-	if (pcidev_id) {
+	if (pcidev_id || is_lpss_priv) {
 		pdata->tx_param = parent;
 		pdata->rx_param = parent;
 		pdata->dma_filter = pxa2xx_spi_idma_filter;
@@ -1651,7 +1658,7 @@ pxa2xx_spi_init_pdata(struct platform_device *pdev)
 #else
 	pdata->is_target = device_property_read_bool(&pdev->dev, "spi-slave");
 #endif
-	pdata->num_chipselect = 1;
+	pdata->num_chipselect = 2;
 	pdata->enable_dma = true;
 	pdata->dma_burst_size = 1;
 
@@ -1777,7 +1784,7 @@ static int pxa2xx_spi_probe(struct platform_device *pdev)
 	controller->setup = setup;
 	controller->set_cs = up_set_cs;//pxa2xx_spi_set_cs;
 	controller->transfer_one = pxa2xx_spi_transfer_one;
-	controller->slave_abort = pxa2xx_spi_slave_abort;
+	//controller->slave_abort = pxa2xx_spi_slave_abort;
 	controller->handle_err = pxa2xx_spi_handle_err;
 	//controller->unprepare_transfer_hardware = pxa2xx_spi_unprepare_transfer;
 	//controller->fw_translate_cs = pxa2xx_spi_fw_translate_cs;
@@ -1896,18 +1903,18 @@ static int pxa2xx_spi_probe(struct platform_device *pdev)
 
 	if (is_lpss_ssp(drv_data)) {
 		lpss_ssp_setup(drv_data);
-		config = lpss_get_config(drv_data);
-		if (config->reg_capabilities >= 0) {
-			tmp = __lpss_ssp_read_priv(drv_data,
-						   config->reg_capabilities);
-			tmp &= LPSS_CAPS_CS_EN_MASK;
-			tmp >>= LPSS_CAPS_CS_EN_SHIFT;
-			platform_info->num_chipselect = ffz(tmp);
-		} else if (config->cs_num) {
-			platform_info->num_chipselect = config->cs_num;
-		}
+		//config = lpss_get_config(drv_data);
+		//if (config->reg_capabilities >= 0) {
+		//	tmp = __lpss_ssp_read_priv(drv_data,
+		//				   config->reg_capabilities);
+		//	tmp &= LPSS_CAPS_CS_EN_MASK;
+		//	tmp >>= LPSS_CAPS_CS_EN_SHIFT;
+		//	platform_info->num_chipselect = ffz(tmp);
+		//} else if (config->cs_num) {
+		//	platform_info->num_chipselect = config->cs_num;
+		//}
 	}
-	controller->num_chipselect = 2;//platform_info->num_chipselect;
+	controller->num_chipselect = platform_info->num_chipselect;
 	controller->use_gpio_descriptors = true;
 
 #if TYPES_IS_SLAVE==1

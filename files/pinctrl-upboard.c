@@ -597,7 +597,7 @@ struct upboard_cs {
         int val;
 };
 static struct upboard_cs cs_pins[2];
-void upboard_set_cs(u8 cs,bool level)
+inline void upboard_set_cs(u8 cs,bool level)
 {
 	if (level)
 		cs_pins[cs].val |= PADCFG0_GPIOTXSTATE;
@@ -869,20 +869,23 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 						val &= ~PADCFG0_GPIOTXDIS;
 						val |= PADCFG0_GPIORXDIS;					
 					}
-					if(strstr(pctrl->pctldesc->pins[offset[i]].name,"CS0"))
-					{
-						//val |= PADCFG0_GPIORXDIS;
-						mode = 0;
-					}
-					if(strstr(pctrl->pctldesc->pins[offset[i]].name,"CS1"))
-					{
-						mode = 0;
-					}
 				break;
 				case BOARD_UPX_MTL01:
 					mode=5;
 				break;
 			}
+			if(strstr(pctrl->pctldesc->pins[offset[i]].name,"CS0"))
+			{
+				val |= PADCFG0_GPIORXDIS;
+				val &= ~PADCFG0_GPIOTXDIS;
+				mode = 0;
+			}
+			if(strstr(pctrl->pctldesc->pins[offset[i]].name,"CS1"))
+			{
+				val |= PADCFG0_GPIORXDIS;
+				val &= ~PADCFG0_GPIOTXDIS;
+				mode = 0;
+			}			
 		}
 		if(strstr(pctrl->pctldesc->pins[offset[i]].name,"I2S")){
 			mode=1;
@@ -1221,13 +1224,6 @@ int upboard_acpi_node_pin_mapping(struct upboard_fpga *fpga,
 	//dispose acpi resource
 	devm_gpiod_put_array(fpga->dev,descs);
 
-        //set cs pin
-        cs_pins[0].cs = &pctrl->pins[21];
-        cs_pins[0].val = readl(pctrl->pins[21].regs);  
-        cs_pins[1].cs = &pctrl->pins[22];
-        cs_pins[1].val = readl(pctrl->pins[22].regs);
-        dev_info(fpga->dev,"cs0:%d, val:%08X",cs_pins[0].cs->gpio,cs_pins[0].val);
-        dev_info(fpga->dev,"cs1:%d, val:%08X",cs_pins[1].cs->gpio,cs_pins[1].val);
 	return ret;
 }
 
@@ -1605,7 +1601,13 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 			upboard_pwm_register(1);
 		break;	
 	}			
-		
+
+        //set cs pin
+        cs_pins[0].cs = &pctrl->pins[21];
+        cs_pins[0].val = readl(pctrl->pins[21].regs);  
+        cs_pins[1].cs = &pctrl->pins[22];
+        cs_pins[1].val = readl(pctrl->pins[22].regs);
+        
 	return ret;
 }
 

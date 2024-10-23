@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * UP Board HAT PWM driver 
+ * check kernel driver proto types 
  *
  * Copyright (c) AAEON. All rights reserved.
  *
@@ -31,6 +31,15 @@ void func(void)
 }
 #endif //CHECK_GPIO
 
+#ifdef CHECK_SPI_CHIP_SELECT
+#include <linux/spi/spi.h>
+void func(void)
+{
+	struct spi_device *spi;
+	int cs = *spi->chip_select;
+}
+#endif //CHECK_SPI_CHIP_SELECT
+
 #ifdef CHECK_SPI_NAMING
 #include <linux/spi/pxa2xx_spi.h>
 void foo(void)
@@ -49,7 +58,6 @@ void foo(void)
 }
 #endif //CHECK_SPI_SSP
 
-
 #ifdef CHECK_PWM_PDEV
 #include <linux/device.h>
 #include <linux/pwm.h>
@@ -67,7 +75,7 @@ static void platform_remove_new(struct platform_device *pdev)
     return; 
 }
 static struct platform_driver driver = {
-	.remove_new = platform_remove_new,
+	.remove = platform_remove_new,
 };
 #endif //CHECK_PLATFORM_DRIVER
 
