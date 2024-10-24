@@ -50,7 +50,7 @@ Build the driver from source
 =============================================
 build deb package
 ----------------------
-To release debian package purpose, please make sure you have installed devscripts and debhelper package,
+To release debian package purpose, please make sure you have installed dh-dkms and devscripts and debhelper package,
 in pinctrl-upboard folder type following command
 ```
 debuild -i -us -uc
