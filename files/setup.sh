@@ -102,3 +102,5 @@ then
     rm /lib/firmware/acpi-upgrades/pc00.i2c0.adc0.aml
 fi
 
+# blacklist update initramfs
+update-initramfs -u -k all
