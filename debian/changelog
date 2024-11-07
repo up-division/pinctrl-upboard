@@ -1,11 +1,11 @@
 pinctrl-upboard (1.1.6) stretch; urgency=medium
 
   * add support kernel 6.11+
-  * fix spi 16/24/32 bits transfer issue
+  * fix spi 16/24/32 bits transfer issue & spi flash rom compatible 
   * modify cs pin control through gpio for all up boards
   * rename spi driver to spi-pxa2xx-up
   
- -- Gary Wang <garywang@aaeon.com.tw>  Thu, 24 Oct 2024 10:05:33 +0100
+ -- Gary Wang <garywang@aaeon.com.tw>  Thu, 7 Nov 2024 16:15:46 +0100
 pinctrl-upboard (1.1.5) stretch; urgency=medium
 
   * improve spi bus small data transfer
