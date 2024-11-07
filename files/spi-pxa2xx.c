@@ -984,13 +984,7 @@ static int up_spi_transfer(struct driver_data *drv_data,
 {
 	u32 nbuf=0;
 	u32 clk_div = pxa2xx_ssp_get_clk_div(drv_data, transfer->speed_hz);
-	int len;
-	unsigned long limit = loops_per_jiffy << 1;
-
-	while ((pxa2xx_spi_read(drv_data, SSSR) & SSSR_BSY) && --limit);
-	write_SSSR_CS(drv_data, SSSR_ROR);
-
-
+	int len=transfer->len;
 		
 	drv_data->tx = transfer->tx_buf;
 	drv_data->tx_end = drv_data->tx + transfer->len;
@@ -1007,7 +1001,7 @@ static int up_spi_transfer(struct driver_data *drv_data,
 		drv_data->n_bytes = 4;
 		ReadVal = u32value;
 	}
-	len = transfer->len/drv_data->n_bytes;
+	
 	//SSCR0
 	pxa2xx_spi_write(drv_data, SSCR0, pxa2xx_configure_sscr0(drv_data, 
 	clk_div, transfer->bits_per_word) | SSCR0_SSE );
@@ -1019,18 +1013,17 @@ static int up_spi_transfer(struct driver_data *drv_data,
 	    //tx
 	    ReadVal(*(u32 *)drv_data->tx,&nbuf);
 	    pxa2xx_spi_write(drv_data, SSDR, drv_data->tx ? nbuf : 0);
-	    drv_data->tx += drv_data->n_bytes;
-	    len -= drv_data->n_bytes;
+	    drv_data->tx += drv_data->n_bytes;	
+	    len -= drv_data->n_bytes;	
 
-	    limit = loops_per_jiffy << 1;
-	    while(read_SSSR_bits(drv_data, SSSR_RNE)  && --limit)
-	    {
-		    //rx
-	    	    ReadVal(pxa2xx_spi_read(drv_data, SSDR),
-	    	    drv_data->rx ? drv_data->rx : &nbuf);
-	    	    drv_data->rx += drv_data->n_bytes;
-		    break;
-	    }
+            if(drv_data->rx==NULL)
+                continue; //continue tx
+
+	    //rx
+            unsigned long limit = transfer->speed_hz/1000;
+    	    while(!(read_SSSR_bits(drv_data, SSSR_RNE)) && --limit);
+	    ReadVal(pxa2xx_spi_read(drv_data, SSDR), drv_data->rx);
+	    drv_data->rx += drv_data->n_bytes;
 	}
 
 	spi_finalize_current_transfer(drv_data->controller);
@@ -1055,16 +1048,6 @@ static int pxa2xx_spi_transfer_one(struct spi_controller *controller,
 	int err;
 	int dma_mapped;
 
-	//improve small data transfer,32+ len using DMA tansfer
-	if (transfer->len < 32)
-	{
-		if (controller->auto_runtime_pm)
-			controller->auto_runtime_pm = false;
-		if (chip->enable_dma)
-			chip->enable_dma=false;	
-		return up_spi_transfer(drv_data, chip, transfer);
-	}
-	
 	/* Check if we can DMA this transfer */
 	if (transfer->len > MAX_DMA_LEN && chip->enable_dma) {
 
@@ -1088,6 +1071,17 @@ static int pxa2xx_spi_transfer_one(struct spi_controller *controller,
 		dev_err(&spi->dev, "Flush failed\n");
 		return -EIO;
 	}
+
+	//improve small data transfer,32+ len using DMA tansfer
+	if (transfer->len < 32)
+	{
+		if (controller->auto_runtime_pm)
+			controller->auto_runtime_pm = false;
+		if (chip->enable_dma)
+			chip->enable_dma=false;	
+		return up_spi_transfer(drv_data, chip, transfer);
+	}
+	
 	drv_data->tx = (void *)transfer->tx_buf;
 	drv_data->tx_end = drv_data->tx + transfer->len;
 	drv_data->rx = transfer->rx_buf;
