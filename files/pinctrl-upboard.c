@@ -354,16 +354,16 @@ enum upboard_up2_reg0_fpgabit {
 	UPFPGA_UP2_EXHAT_LVDS1p,
 	UPFPGA_UP2_SPI2_TXD,
 	UPFPGA_UP2_SPI2_RXD,
-	UPFPGA_UP2_SPI2_FS1,
-	UPFPGA_UP2_SPI2_FS0,
+	UPFPGA_UP2_SPI2_CS1,
+	UPFPGA_UP2_SPI2_CS0,
 	UPFPGA_UP2_SPI2_CLK,
 	UPFPGA_UP2_SPI1_TXD,
 };
 
 enum upboard_up2_reg1_fpgabit {
 	UPFPGA_UP2_SPI1_RXD,
-	UPFPGA_UP2_SPI1_FS1,
-	UPFPGA_UP2_SPI1_FS0,
+	UPFPGA_UP2_SPI1_CS1,
+	UPFPGA_UP2_SPI1_CS0,
 	UPFPGA_UP2_SPI1_CLK,
 	UPFPGA_UP2_BIT20,
 	UPFPGA_UP2_BIT21,
@@ -411,13 +411,13 @@ static struct pinctrl_pin_desc upboard_up2_pins[] = {
 	UPBOARD_UP2_PIN_NAME(0, EXHAT_LVDS1p),
 	UPBOARD_UP2_PIN_NAME(0, SPI2_TXD),
 	UPBOARD_UP2_PIN_NAME(0, SPI2_RXD),
-	UPBOARD_UP2_PIN_NAME(0, SPI2_FS1),
-	UPBOARD_UP2_PIN_NAME(0, SPI2_FS0),
+	UPBOARD_UP2_PIN_NAME(0, SPI2_CS1),
+	UPBOARD_UP2_PIN_NAME(0, SPI2_CS0),
 	UPBOARD_UP2_PIN_NAME(0, SPI2_CLK),
 	UPBOARD_UP2_PIN_NAME(0, SPI1_TXD),
 	UPBOARD_UP2_PIN_NAME(1, SPI1_RXD),
-	UPBOARD_UP2_PIN_NAME(1, SPI1_FS1),
-	UPBOARD_UP2_PIN_NAME(1, SPI1_FS0),
+	UPBOARD_UP2_PIN_NAME(1, SPI1_CS1),
+	UPBOARD_UP2_PIN_NAME(1, SPI1_CS0),
 	UPBOARD_UP2_PIN_NAME(1, SPI1_CLK),
 	UPBOARD_UP2_PIN_MUX(1, 4, &upboard_i2c0_reg),
 	UPBOARD_UP2_PIN_MUX(1, 5, &upboard_i2c0_reg),
@@ -457,8 +457,8 @@ static const unsigned int upboard_up2_rpi_mapping[] = {
 	UPBOARD_UP2_BIT_TO_PIN(0, GPIO3_ADC0),
 	UPBOARD_UP2_BIT_TO_PIN(0, GPIO11),
 	UPBOARD_UP2_BIT_TO_PIN(0, SPI2_CLK),
-	UPBOARD_UP2_BIT_TO_PIN(1, SPI1_FS1),
-	UPBOARD_UP2_BIT_TO_PIN(1, SPI1_FS0),
+	UPBOARD_UP2_BIT_TO_PIN(1, SPI1_CS1),
+	UPBOARD_UP2_BIT_TO_PIN(1, SPI1_CS0),
 	UPBOARD_UP2_BIT_TO_PIN(1, SPI1_RXD),
 	UPBOARD_UP2_BIT_TO_PIN(0, SPI1_TXD),
 	UPBOARD_UP2_BIT_TO_PIN(1, SPI1_CLK),
@@ -473,10 +473,10 @@ static const unsigned int upboard_up2_rpi_mapping[] = {
 	UPBOARD_UP2_BIT_TO_PIN(2, I2S_SDI),
 	UPBOARD_UP2_BIT_TO_PIN(2, I2S_SDO),
 	UPBOARD_UP2_BIT_TO_PIN(0, GPIO6_ADC3),
-	UPBOARD_UP2_BIT_TO_PIN(0, SPI2_FS1),
+	UPBOARD_UP2_BIT_TO_PIN(0, SPI2_CS1),
 	UPBOARD_UP2_BIT_TO_PIN(0, SPI2_RXD),
 	UPBOARD_UP2_BIT_TO_PIN(0, SPI2_TXD),
-	UPBOARD_UP2_BIT_TO_PIN(0, SPI2_FS0),
+	UPBOARD_UP2_BIT_TO_PIN(0, SPI2_CS0),
 	UPBOARD_UP2_BIT_TO_PIN(0, GPIO5_ADC2),
 };
 
@@ -1587,6 +1587,14 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 	//pwm controller
 	switch(pctrl->ident)
 	{
+	        case BOARD_UP_APL01:
+	        case BOARD_UPN_APL:
+                //set cs pin
+                cs_pins[0].cs = &pctrl->pins[18];
+                cs_pins[0].val = readl(pctrl->pins[18].regs);  
+                cs_pins[1].cs = &pctrl->pins[17];
+                cs_pins[1].val = readl(pctrl->pins[17].regs);
+	        break;
 		case BOARD_UP_WHL01:
 		case BOARD_UPX_WHLite:
 		case BOARD_UPX_TGL:
@@ -1600,14 +1608,15 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 		case BOARD_UPX_MTL01:
 			upboard_pwm_register(1);
 		break;	
+		default:
+                //set cs pin
+                cs_pins[0].cs = &pctrl->pins[21];
+                cs_pins[0].val = readl(pctrl->pins[21].regs);  
+                cs_pins[1].cs = &pctrl->pins[22];
+                cs_pins[1].val = readl(pctrl->pins[22].regs);
+                break;		
 	}			
 
-        //set cs pin
-        cs_pins[0].cs = &pctrl->pins[21];
-        cs_pins[0].val = readl(pctrl->pins[21].regs);  
-        cs_pins[1].cs = &pctrl->pins[22];
-        cs_pins[1].val = readl(pctrl->pins[22].regs);
-        
 	return ret;
 }
 
