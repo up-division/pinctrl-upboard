@@ -73,6 +73,7 @@
 #define BOARD_UP_ADLN01     18
 #define BOARD_UPN_ASLH01    19
 #define BOARD_UPX_MTL01     20
+#define BOARD_UPX_ARL01     BOARD_UPX_MTL01
 
 #define STR_INDIRECTION(x) (const char*)#x
 #define STR_ID(x) STR_INDIRECTION(x)
@@ -599,6 +600,8 @@ struct upboard_cs {
 static struct upboard_cs cs_pins[2];
 inline void upboard_set_cs(u8 cs,bool level)
 {
+        if(cs_pins[cs].cs==NULL)
+                return;
 	if (level)
 		cs_pins[cs].val |= PADCFG0_GPIOTXSTATE;
 	else
@@ -1347,6 +1350,13 @@ static const struct dmi_system_id upboard_dmi_table[] = {
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPX-MTL01"),
 		},
 	},
+	{
+		.ident = STR_ID(BOARD_UPX_ARL01),
+		.matches = {
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPX-ARL01"),
+		},
+	},	
 	{ },
 };
 
