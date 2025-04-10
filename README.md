@@ -35,7 +35,7 @@ Download the latest deb package from [the release folder](https://github.com/up-
 2. install deb package
 ------------------------
 ```
-sudo dpkg -i pinctrl-upboard_1.1.3_all.deb
+sudo dpkg -i pinctrl-upboard_*.deb
 ```
 Reboot the system again before starting to use the 40 pin header functionalities.
 
