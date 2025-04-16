@@ -19,7 +19,12 @@
 #include <linux/ioport.h>
 
 #include "upboard-ec.h"
-#include "upboard-cpld.h"
+#include "upboard-fpga.h"
+
+struct upboard_led_data {
+	unsigned int bit;
+	const char *colour;
+};
 
 #define UPBOARD_LED_CELL(led_data, n)                   \
 	{                                               \
@@ -37,14 +42,14 @@ struct upboard_ec_data {
 
 static const struct regmap_range upboard_ec_readable_ranges[] = {
 	regmap_reg_range(UPEC_REG_LED, UPEC_REG_VAL2),
-	regmap_reg_range(UPFPGA_REG_FUNC_EN0, UPFPGA_REG_FUNC_EN0),
+	regmap_reg_range(UPBOARD_REG_FUNC_EN0, UPBOARD_REG_FUNC_EN0),
 	regmap_reg_range(UPEC_REG_DAT_GP16, UPEC_REG_DAT_GP15),
 	regmap_reg_range(UPEC_REG_DAT2, UPEC_REG_DAT1),
 };
 
 static const struct regmap_range upboard_ec_writable_ranges[] = {
 	regmap_reg_range(UPEC_REG_LED, UPEC_REG_VAL2),
-	regmap_reg_range(UPFPGA_REG_FUNC_EN0, UPFPGA_REG_FUNC_EN0),
+	regmap_reg_range(UPBOARD_REG_FUNC_EN0, UPBOARD_REG_FUNC_EN0),
 };
 
 static const struct regmap_access_table upboard_ec_readable_table = {
@@ -191,7 +196,7 @@ void set_ram(int addr, unsigned char data)
 int upboard_ec_read(void *context, unsigned int reg, unsigned int *val)
 {
 
-	if(reg==UPFPGA_REG_FUNC_EN0)
+	if(reg==UPBOARD_REG_FUNC_EN0)
 	{
 		send_cmd(UPEC_CMD_READ);
 		send_data(UPEC_REG_LED);
@@ -215,7 +220,7 @@ int upboard_ec_read(void *context, unsigned int reg, unsigned int *val)
 int upboard_ec_write(void *context, unsigned int reg, unsigned int val)
 {
 	send_cmd(UPEC_CMD_WRITE);
-	if(reg==UPFPGA_REG_FUNC_EN0)	//fpga fun0 reg for leds
+	if(reg==UPBOARD_REG_FUNC_EN0)	//fpga fun0 reg for leds
 	    send_data(UPEC_REG_LED);
 	else
 	    send_data(reg);

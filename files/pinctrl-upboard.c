@@ -23,11 +23,13 @@
 #include <linux/pinctrl/pinctrl.h>
 #include <linux/pinctrl/pinmux.h>
 
-#include "upboard-cpld.h"
+#include "upboard-fpga.h"
 #include "core.h"
 #include "pinctrl-intel.h"
 #include "pwm-lpss.h"
 #include "protos.h"
+
+void upboard_pwm_register(int);
 
 //for older kernel lost DIRECTION_IN/OUT definition
 #ifndef GPIO_LINE_DIRECTION_IN
@@ -72,8 +74,15 @@
 #define BOARD_UPS_ADLP01    BOARD_UPX_ADLP01
 #define BOARD_UP_ADLN01     18
 #define BOARD_UPN_ASLH01    19
-#define BOARD_UPX_MTL01     20
+#define BOARD_UPX_MTL01     21
 #define BOARD_UPX_ARL01     BOARD_UPX_MTL01
+#define BOARD_UPS_ASL01     22
+#define BOARD_UP_ASL02      BOARD_UPS_ASL01
+#define BOARD_UPN_TWL01     BOARD_UPN_ADLN01 //as same as UPN_ADLN01, 26
+#define BOARD_UP_TWL01      BOARD_UP_ADLN01 //as same as UP_ADLN01, 27
+#define BOARD_UP_TWL02      BOARD_UP_ASL02 //as same as UP_ASL02, 28
+#define BOARD_UPS_TWL01     BOARD_UPS_ASL01 //as same as UPS_ASL01,29
+#define BOARD_UPN_TWLH01    BOARD_UPN_ASLH01 //as same as UPN_ASLH01, 30
 
 #define STR_INDIRECTION(x) (const char*)#x
 #define STR_ID(x) STR_INDIRECTION(x)
@@ -100,20 +109,20 @@ struct upboard_pinctrl {
 };
 
 enum upboard_func0_fpgabit {
-	UPFPGA_I2C0_EN = 8,
-	UPFPGA_I2C1_EN = 9,
-	UPFPGA_CEC0_EN = 12,
-	UPFPGA_ADC0_EN = 14,
+	UPBOARD_I2C0_EN = 8,
+	UPBOARD_I2C1_EN = 9,
+	UPBOARD_CEC0_EN = 12,
+	UPBOARD_ADC0_EN = 14,
 };
 
 static const struct reg_field upboard_i2c0_reg =
-	REG_FIELD(UPFPGA_REG_FUNC_EN0, UPFPGA_I2C0_EN, UPFPGA_I2C0_EN);
+	REG_FIELD(UPBOARD_REG_FUNC_EN0, UPBOARD_I2C0_EN, UPBOARD_I2C0_EN);
 
 static const struct reg_field upboard_i2c1_reg =
-	REG_FIELD(UPFPGA_REG_FUNC_EN0, UPFPGA_I2C1_EN, UPFPGA_I2C1_EN);
+	REG_FIELD(UPBOARD_REG_FUNC_EN0, UPBOARD_I2C1_EN, UPBOARD_I2C1_EN);
 
 static const struct reg_field upboard_adc0_reg =
-	REG_FIELD(UPFPGA_REG_FUNC_EN0, UPFPGA_ADC0_EN, UPFPGA_ADC0_EN);
+	REG_FIELD(UPBOARD_REG_FUNC_EN0, UPBOARD_ADC0_EN, UPBOARD_ADC0_EN);
 
 
 /* Pin group information */
@@ -131,13 +140,13 @@ struct upboard_function {
 };
 
 #define UPBOARD_BIT_TO_PIN(r, bit) \
-	((r) * UPFPGA_REGISTER_SIZE + (bit))
+	((r) * UPBOARD_REGISTER_SIZE + (bit))
 
 /*
  * UP board data
  */
 
-#define UPBOARD_UP_BIT_TO_PIN(r, id) (UPBOARD_BIT_TO_PIN(r, UPFPGA_UP_##id))
+#define UPBOARD_UP_BIT_TO_PIN(r, id) (UPBOARD_BIT_TO_PIN(r, UPBOARD_UP_##id))
 
 #define UPBOARD_UP_PIN_ANON(r, bit)					\
 	{								\
@@ -173,41 +182,41 @@ struct upboard_function {
 	
 
 enum upboard_up_reg1_fpgabit {
-	UPFPGA_UP_I2C1_SDA,
-	UPFPGA_UP_I2C1_SCL,
-	UPFPGA_UP_ADC0,
-	UPFPGA_UP_GPIO17,
-	UPFPGA_UP_GPIO27,
-	UPFPGA_UP_GPIO22,
-	UPFPGA_UP_SPI_MOSI,
-	UPFPGA_UP_SPI_MISO,
-	UPFPGA_UP_SPI_CLK,
-	UPFPGA_UP_I2C0_SDA,
-	UPFPGA_UP_GPIO5,
-	UPFPGA_UP_GPIO6,
-	UPFPGA_UP_PWM1,
-	UPFPGA_UP_I2S_FRM,
-	UPFPGA_UP_GPIO26,
-	UPFPGA_UP_UART1_TX,
+	UPBOARD_UP_I2C1_SDA,
+	UPBOARD_UP_I2C1_SCL,
+	UPBOARD_UP_ADC0,
+	UPBOARD_UP_GPIO17,
+	UPBOARD_UP_GPIO27,
+	UPBOARD_UP_GPIO22,
+	UPBOARD_UP_SPI_MOSI,
+	UPBOARD_UP_SPI_MISO,
+	UPBOARD_UP_SPI_CLK,
+	UPBOARD_UP_I2C0_SDA,
+	UPBOARD_UP_GPIO5,
+	UPBOARD_UP_GPIO6,
+	UPBOARD_UP_PWM1,
+	UPBOARD_UP_I2S_FRM,
+	UPBOARD_UP_GPIO26,
+	UPBOARD_UP_UART1_TX,
 };
 
 enum upboard_up_reg2_fpgabit {
-	UPFPGA_UP_UART1_RX,
-	UPFPGA_UP_I2S_CLK,
-	UPFPGA_UP_GPIO23,
-	UPFPGA_UP_GPIO24,
-	UPFPGA_UP_GPIO25,
-	UPFPGA_UP_SPI_CS0,
-	UPFPGA_UP_SPI_CS1,
-	UPFPGA_UP_I2C0_SCL,
-	UPFPGA_UP_PWM0,
-	UPFPGA_UP_GPIO16,
-	UPFPGA_UP_I2S_DIN,
-	UPFPGA_UP_I2S_DOUT,
+	UPBOARD_UP_UART1_RX,
+	UPBOARD_UP_I2S_CLK,
+	UPBOARD_UP_GPIO23,
+	UPBOARD_UP_GPIO24,
+	UPBOARD_UP_GPIO25,
+	UPBOARD_UP_SPI_CS0,
+	UPBOARD_UP_SPI_CS1,
+	UPBOARD_UP_I2C0_SCL,
+	UPBOARD_UP_PWM0,
+	UPBOARD_UP_GPIO16,
+	UPBOARD_UP_I2S_DIN,
+	UPBOARD_UP_I2S_DOUT,
 };
 
-#define UPFPGA_UP_UART1_RTS UPFPGA_UP_GPIO17
-#define UPFPGA_UP_UART1_CTS UPFPGA_UP_GPIO16
+#define UPBOARD_UP_UART1_RTS UPBOARD_UP_GPIO17
+#define UPBOARD_UP_UART1_CTS UPBOARD_UP_GPIO16
 
 static struct pinctrl_pin_desc upboard_up_pins[] = {
 	UPBOARD_UP_PIN_FUNC(0, I2C1_SDA, &upboard_i2c1_reg),
@@ -320,7 +329,7 @@ static const struct upboard_function pin_functions[] = {
  * UP^2 board data
  */
 
-#define UPBOARD_UP2_BIT_TO_PIN(r, id) (UPBOARD_BIT_TO_PIN(r, UPFPGA_UP2_##id))
+#define UPBOARD_UP2_BIT_TO_PIN(r, id) (UPBOARD_BIT_TO_PIN(r, UPBOARD_UP2_##id))
 
 #define UPBOARD_UP2_PIN_MUX(r, bit, data)				\
 	{								\
@@ -343,60 +352,60 @@ static const struct upboard_function pin_functions[] = {
 	}
 
 enum upboard_up2_reg0_fpgabit {
-	UPFPGA_UP2_UART1_TXD,
-	UPFPGA_UP2_UART1_RXD,
-	UPFPGA_UP2_UART1_RTS,
-	UPFPGA_UP2_UART1_CTS,
-	UPFPGA_UP2_GPIO3_ADC0,
-	UPFPGA_UP2_GPIO5_ADC2,
-	UPFPGA_UP2_GPIO6_ADC3,
-	UPFPGA_UP2_GPIO11,
-	UPFPGA_UP2_EXHAT_LVDS1n,
-	UPFPGA_UP2_EXHAT_LVDS1p,
-	UPFPGA_UP2_SPI2_TXD,
-	UPFPGA_UP2_SPI2_RXD,
-	UPFPGA_UP2_SPI2_CS1,
-	UPFPGA_UP2_SPI2_CS0,
-	UPFPGA_UP2_SPI2_CLK,
-	UPFPGA_UP2_SPI1_TXD,
+	UPBOARD_UP2_UART1_TXD,
+	UPBOARD_UP2_UART1_RXD,
+	UPBOARD_UP2_UART1_RTS,
+	UPBOARD_UP2_UART1_CTS,
+	UPBOARD_UP2_GPIO3_ADC0,
+	UPBOARD_UP2_GPIO5_ADC2,
+	UPBOARD_UP2_GPIO6_ADC3,
+	UPBOARD_UP2_GPIO11,
+	UPBOARD_UP2_EXHAT_LVDS1n,
+	UPBOARD_UP2_EXHAT_LVDS1p,
+	UPBOARD_UP2_SPI2_TXD,
+	UPBOARD_UP2_SPI2_RXD,
+	UPBOARD_UP2_SPI2_CS1,
+	UPBOARD_UP2_SPI2_CS0,
+	UPBOARD_UP2_SPI2_CLK,
+	UPBOARD_UP2_SPI1_TXD,
 };
 
 enum upboard_up2_reg1_fpgabit {
-	UPFPGA_UP2_SPI1_RXD,
-	UPFPGA_UP2_SPI1_CS1,
-	UPFPGA_UP2_SPI1_CS0,
-	UPFPGA_UP2_SPI1_CLK,
-	UPFPGA_UP2_BIT20,
-	UPFPGA_UP2_BIT21,
-	UPFPGA_UP2_BIT22,
-	UPFPGA_UP2_BIT23,
-	UPFPGA_UP2_PWM1,
-	UPFPGA_UP2_PWM0,
-	UPFPGA_UP2_EXHAT_LVDS0n,
-	UPFPGA_UP2_EXHAT_LVDS0p,
-	UPFPGA_UP2_I2C0_SCL,
-	UPFPGA_UP2_I2C0_SDA,
-	UPFPGA_UP2_I2C1_SCL,
-	UPFPGA_UP2_I2C1_SDA,
+	UPBOARD_UP2_SPI1_RXD,
+	UPBOARD_UP2_SPI1_CS1,
+	UPBOARD_UP2_SPI1_CS0,
+	UPBOARD_UP2_SPI1_CLK,
+	UPBOARD_UP2_BIT20,
+	UPBOARD_UP2_BIT21,
+	UPBOARD_UP2_BIT22,
+	UPBOARD_UP2_BIT23,
+	UPBOARD_UP2_PWM1,
+	UPBOARD_UP2_PWM0,
+	UPBOARD_UP2_EXHAT_LVDS0n,
+	UPBOARD_UP2_EXHAT_LVDS0p,
+	UPBOARD_UP2_I2C0_SCL,
+	UPBOARD_UP2_I2C0_SDA,
+	UPBOARD_UP2_I2C1_SCL,
+	UPBOARD_UP2_I2C1_SDA,
 };
 
 enum upboard_up2_reg2_fpgabit {
-	UPFPGA_UP2_EXHAT_LVDS3n,
-	UPFPGA_UP2_EXHAT_LVDS3p,
-	UPFPGA_UP2_EXHAT_LVDS4n,
-	UPFPGA_UP2_EXHAT_LVDS4p,
-	UPFPGA_UP2_EXHAT_LVDS5n,
-	UPFPGA_UP2_EXHAT_LVDS5p,
-	UPFPGA_UP2_I2S_SDO,
-	UPFPGA_UP2_I2S_SDI,
-	UPFPGA_UP2_I2S_WS_SYNC,
-	UPFPGA_UP2_I2S_BCLK,
-	UPFPGA_UP2_EXHAT_LVDS6n,
-	UPFPGA_UP2_EXHAT_LVDS6p,
-	UPFPGA_UP2_EXHAT_LVDS7n,
-	UPFPGA_UP2_EXHAT_LVDS7p,
-	UPFPGA_UP2_EXHAT_LVDS2n,
-	UPFPGA_UP2_EXHAT_LVDS2p,
+	UPBOARD_UP2_EXHAT_LVDS3n,
+	UPBOARD_UP2_EXHAT_LVDS3p,
+	UPBOARD_UP2_EXHAT_LVDS4n,
+	UPBOARD_UP2_EXHAT_LVDS4p,
+	UPBOARD_UP2_EXHAT_LVDS5n,
+	UPBOARD_UP2_EXHAT_LVDS5p,
+	UPBOARD_UP2_I2S_SDO,
+	UPBOARD_UP2_I2S_SDI,
+	UPBOARD_UP2_I2S_WS_SYNC,
+	UPBOARD_UP2_I2S_BCLK,
+	UPBOARD_UP2_EXHAT_LVDS6n,
+	UPBOARD_UP2_EXHAT_LVDS6p,
+	UPBOARD_UP2_EXHAT_LVDS7n,
+	UPBOARD_UP2_EXHAT_LVDS7p,
+	UPBOARD_UP2_EXHAT_LVDS2n,
+	UPBOARD_UP2_EXHAT_LVDS2p,
 };
 
 static struct pinctrl_pin_desc upboard_up2_pins[] = {
@@ -486,7 +495,7 @@ static const unsigned int upboard_up2_rpi_mapping[] = {
  */
 
 #define UPBOARD_UPCORE_CREX_BIT_TO_PIN(r, id)				\
-	(UPBOARD_BIT_TO_PIN(r, UPFPGA_UPCORE_CREX_##id))
+	(UPBOARD_BIT_TO_PIN(r, UPBOARD_UPCORE_CREX_##id))
 
 #define UPBOARD_UPCORE_CREX_PIN_ANON(r, bit)				\
 	{								\
@@ -507,31 +516,31 @@ static const unsigned int upboard_up2_rpi_mapping[] = {
 	}
 
 enum upboard_upcore_crex_reg1_fpgabit {
-	UPFPGA_UPCORE_CREX_I2C0_SDA,
-	UPFPGA_UPCORE_CREX_I2C0_SCL,
-	UPFPGA_UPCORE_CREX_I2C1_SDA,
-	UPFPGA_UPCORE_CREX_I2C1_SCL,
-	UPFPGA_UPCORE_CREX_SPI2_CS0,
-	UPFPGA_UPCORE_CREX_SPI2_CS1,
-	UPFPGA_UPCORE_CREX_SPI2_MOSI,
-	UPFPGA_UPCORE_CREX_SPI2_MISO,
-	UPFPGA_UPCORE_CREX_SPI2_CLK,
-	UPFPGA_UPCORE_CREX_UART1_TXD,
-	UPFPGA_UPCORE_CREX_UART1_RXD,
-	UPFPGA_UPCORE_CREX_PWM0,
-	UPFPGA_UPCORE_CREX_PWM1,
-	UPFPGA_UPCORE_CREX_I2S2_FRM,
-	UPFPGA_UPCORE_CREX_I2S2_CLK,
-	UPFPGA_UPCORE_CREX_I2S2_RX,
+	UPBOARD_UPCORE_CREX_I2C0_SDA,
+	UPBOARD_UPCORE_CREX_I2C0_SCL,
+	UPBOARD_UPCORE_CREX_I2C1_SDA,
+	UPBOARD_UPCORE_CREX_I2C1_SCL,
+	UPBOARD_UPCORE_CREX_SPI2_CS0,
+	UPBOARD_UPCORE_CREX_SPI2_CS1,
+	UPBOARD_UPCORE_CREX_SPI2_MOSI,
+	UPBOARD_UPCORE_CREX_SPI2_MISO,
+	UPBOARD_UPCORE_CREX_SPI2_CLK,
+	UPBOARD_UPCORE_CREX_UART1_TXD,
+	UPBOARD_UPCORE_CREX_UART1_RXD,
+	UPBOARD_UPCORE_CREX_PWM0,
+	UPBOARD_UPCORE_CREX_PWM1,
+	UPBOARD_UPCORE_CREX_I2S2_FRM,
+	UPBOARD_UPCORE_CREX_I2S2_CLK,
+	UPBOARD_UPCORE_CREX_I2S2_RX,
 };
 
 enum upboard_upcore_crex_reg2_fpgabit {
-	UPFPGA_UPCORE_CREX_I2S2_TX,
-	UPFPGA_UPCORE_CREX_GPIO0,
-	UPFPGA_UPCORE_CREX_GPIO2,
-	UPFPGA_UPCORE_CREX_GPIO3,
-	UPFPGA_UPCORE_CREX_GPIO4,
-	UPFPGA_UPCORE_CREX_GPIO9,
+	UPBOARD_UPCORE_CREX_I2S2_TX,
+	UPBOARD_UPCORE_CREX_GPIO0,
+	UPBOARD_UPCORE_CREX_GPIO2,
+	UPBOARD_UPCORE_CREX_GPIO3,
+	UPBOARD_UPCORE_CREX_GPIO4,
+	UPBOARD_UPCORE_CREX_GPIO9,
 };
 
 static struct pinctrl_pin_desc upboard_upcore_crex_pins[] = {
@@ -1182,11 +1191,9 @@ static void __iomem *upboard_get_regs(struct gpio_chip *gc, unsigned int gpio, u
 	return base+offset+reg+pin*nregs*4;
 }
 
-int upboard_acpi_node_pin_mapping(struct upboard_fpga *fpga,
+int upboard_acpi_get_pins(struct upboard_fpga *fpga,
 				struct upboard_pinctrl *pctrl,
-			  	const char *propname,
-			  	const char *pinctl_name,
-			  	unsigned int pin_offset)
+			  	const char *propname)
 {
 	struct gpio_descs *descs = devm_gpiod_get_array(fpga->dev, propname, GPIOD_ASIS);
 	int ret=0, i;
@@ -1207,10 +1214,23 @@ int upboard_acpi_node_pin_mapping(struct upboard_fpga *fpga,
 		pctrl->pins[i].parent_irq = gpiod_to_irq(desc);
 
 		pctrl->pins[i].regs = upboard_get_regs(gc,desc_to_gpio(desc),PADCFG0);
+	}
+	
+	//dispose acpi resource
+	devm_gpiod_put_array(fpga->dev,descs);
 
+	return 0;
+}
+
+int upboard_acpi_node_pin_mapping(struct upboard_pinctrl *pctrl,
+			  	const char *pinctl_name,
+			  	unsigned int pin_offset)
+{
+        int ret=0, i;
+	for (i = 0; i < pctrl->pctldesc->npins; i++) {
 		/* The GPIOs may not be contiguous, so add them 1-by-1 */
-		ret = gpiochip_add_pin_range(gpiod_to_chip(desc), pinctl_name,
-					     desc_to_gpio(desc)-gc->base,
+		ret = gpiochip_add_pin_range(gpiod_to_chip(gpio_to_desc(pctrl->pins[i].gpio)), pinctl_name,
+					     pctrl->pins[i].gpio-pctrl->pins[i].base,
 					     pin_offset+i, 1);		
 		if (ret)
 			return ret;
@@ -1220,13 +1240,8 @@ int upboard_acpi_node_pin_mapping(struct upboard_fpga *fpga,
 	        {
 		    unsigned int p = pctrl->rpi_mapping[i];
 		    pctrl->pins[p].irq = gpiod_to_irq(gpio_to_desc(i));
-		}
-			
+		}		
 	}
-	
-	//dispose acpi resource
-	devm_gpiod_put_array(fpga->dev,descs);
-
 	return ret;
 }
 
@@ -1355,6 +1370,55 @@ static const struct dmi_system_id upboard_dmi_table[] = {
 		.matches = {
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
 			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPX-ARL01"),
+		},
+	},	
+	{
+		.ident = STR_ID(BOARD_UPS_ASL01),
+		.matches = {
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPS-ASL01"),
+		},
+	},	
+	{
+		.ident = STR_ID(BOARD_UP_ASL02),
+		.matches = {
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UP-ASL02"),
+		},
+	},	
+	{
+		.ident = STR_ID(BOARD_UPN_TWL01),
+		.matches = {
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPN-TWL01"),
+		},
+	},	
+	{
+		.ident = STR_ID(BOARD_UP_TWL01),
+		.matches = {
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UP-TWL01"),
+		},
+	},	
+	{
+		.ident = STR_ID(BOARD_UP_TWL02),
+		.matches = {
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UP-TWL02"),
+		},
+	},	
+	{
+		.ident = STR_ID(BOARD_UPS_TWL01),
+		.matches = {
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPS-TWL01"),
+		},
+	},	
+	{
+		.ident = STR_ID(BOARD_UPN_TWLH01),
+		.matches = {
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPN-TWLH01"),
 		},
 	},	
 	{ },
@@ -1514,8 +1578,8 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 		struct pinctrl_pin_desc *pd = (struct pinctrl_pin_desc *)
 			&pctldesc->pins[i];
 		struct reg_field fldconf = {0};
-		unsigned int regoff = (pd->number / UPFPGA_REGISTER_SIZE);
-		unsigned int lsb = pd->number % UPFPGA_REGISTER_SIZE;
+		unsigned int regoff = (pd->number / UPBOARD_REGISTER_SIZE);
+		unsigned int lsb = pd->number % UPBOARD_REGISTER_SIZE;
 
 		pin->funcbit = NULL;
 		if (pd->drv_data) {
@@ -1529,7 +1593,7 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 		}
 
 		//pin->enbit = NULL;
-		fldconf.reg = UPFPGA_REG_GPIO_EN0 + regoff;
+		fldconf.reg = UPBOARD_REG_GPIO_EN0 + regoff;
 		fldconf.lsb = lsb;
 		fldconf.msb = lsb;
 
@@ -1539,7 +1603,7 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 		if (IS_ERR(pin->enbit))
 			return PTR_ERR(pin->enbit);
 
-		fldconf.reg = UPFPGA_REG_GPIO_DIR0 + regoff;
+		fldconf.reg = UPBOARD_REG_GPIO_DIR0 + regoff;
 		fldconf.lsb = lsb;
 		fldconf.msb = lsb;
 
@@ -1569,6 +1633,10 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 	pctrl->chip.irq.handler = handle_edge_irq;
 	pctrl->chip.irq.chip = &upboard_gpio_irqchip;	
 	
+	ret = upboard_acpi_get_pins(fpga, pctrl, "external");
+	if (ret)
+		return ret;
+
 	ret = devm_gpiochip_add_data(&pdev->dev, &pctrl->chip, pctrl);
 	if (ret)
 		return ret;
@@ -1578,11 +1646,7 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 		return PTR_ERR(pctrl->pctldev);
 
 	/* add acpi pin mapping according to external-gpios key */
-	ret = upboard_acpi_node_pin_mapping(fpga, pctrl, 
-					"external",
-					dev_name(&pdev->dev),
-					0);
-					
+	ret = upboard_acpi_node_pin_mapping(pctrl, dev_name(&pdev->dev), 0);	
 	if (ret)
 		return ret;
 
