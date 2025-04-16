@@ -1,3 +1,11 @@
+pinctrl-upboard (1.1.7) stretch; urgency=medium
+
+  * add support UPS-ASL01,UP-ASL02,UPN-TWL01,UP-TWL01,UP-TWL02,UPS-TWL01,UPN-TWLH01
+  * sync up with upstream source code (upboard-fpga & leds-upboard)
+  * fix pwm probe fail in kernel 6.9+ 
+  * fix driver data get sequence issue for libgpiod 
+  
+ -- Gary Wang <garywang@aaeon.com.tw>  Wed, 16 Apr 2025 13:34:21 +0100
 pinctrl-upboard (1.1.6) stretch; urgency=medium
 
   * add support kernel 6.11+
