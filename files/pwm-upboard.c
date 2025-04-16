@@ -13,6 +13,7 @@
 #include <linux/iopoll.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
+#include <linux/version.h>
 
 #include "pwm-lpss.h"
 #include "protos.h"
@@ -166,6 +167,46 @@ static const struct pwm_ops pwm_lpss_ops = {
 	.get_state = upboard_pwm_get_state,
 };
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 9, 0)
+struct pwm_chip *upboard_pwm_probe(struct device *dev, struct resource *r,
+				     const struct pwm_lpss_boardinfo *info)	
+{
+	struct pwm_lpss_chip *lpwm;
+	struct pwm_chip *chip;
+	unsigned long c;
+	int i, ret;
+	u32 ctrl;
+
+	if (WARN_ON(info->npwm > LPSS_MAX_PWMS))
+		return ERR_PTR(-ENODEV);
+
+	chip = devm_pwmchip_alloc(dev, info->npwm, sizeof(*lpwm));
+	if (IS_ERR(chip))
+		return chip;
+	lpwm = to_lpwm(chip);
+
+	lpwm->regs = devm_ioremap(&up_pwm->dev, r[0].start, resource_size(r));
+	lpwm->info = info;
+
+	c = lpwm->info->clk_rate;
+	if (!c)
+		return ERR_PTR(-EINVAL);
+
+	chip->ops = &pwm_lpss_ops;
+
+	ret = devm_pwmchip_add(dev, chip);
+	if (ret) {
+		dev_err(dev, "failed to add PWM chip: %d\n", ret);
+		return ERR_PTR(ret);
+	}
+
+	for (i = 0; i < lpwm->info->npwm; i++) {
+		ctrl = upboard_pwm_read(&chip->pwms[i]);
+	}
+
+	return chip;
+}			     
+#else
 struct pwm_lpss_chip *upboard_pwm_probe(struct device *dev, struct resource *r,
 				     const struct pwm_lpss_boardinfo *info)
 {
@@ -196,7 +237,11 @@ struct pwm_lpss_chip *upboard_pwm_probe(struct device *dev, struct resource *r,
 	lpwm->chip.ops = &pwm_lpss_ops;
 	lpwm->chip.npwm = info->npwm;
 
+#if TYPES_NO_ERROR_CODE==1
 	ret = pwmchip_add(&lpwm->chip);
+#else
+	ret = devm_pwmchip_add(dev, &lpwm->chip);
+#endif
 
 	if (ret) {
 		dev_err(dev, "failed to add PWM chip: %d\n", ret);
@@ -209,6 +254,7 @@ struct pwm_lpss_chip *upboard_pwm_probe(struct device *dev, struct resource *r,
 
 	return lpwm;
 }
+#endif
 
 static void __exit
 upboard_pwm_exit(void)

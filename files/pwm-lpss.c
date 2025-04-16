@@ -20,7 +20,7 @@
 #include <linux/time.h>
 #include <linux/platform_device.h>
 
-#define DEFAULT_SYMBOL_NAMESPACE PWM_LPSS
+#define DEFAULT_SYMBOL_NAMESPACE "PWM_LPSS"
 
 #include "pwm-lpss.h"
 #include "protos.h"
@@ -241,6 +241,48 @@ static const struct pwm_ops pwm_lpss_ops = {
 	.get_state = pwm_lpss_get_state,
 };
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 9, 0)
+struct pwm_chip *upboard_pwm_lpss_probe(struct device *dev, void __iomem *base,
+				     const struct pwm_lpss_boardinfo *info)
+{
+	struct pwm_lpss_chip *lpwm;
+	struct pwm_chip *chip;
+	unsigned long c;
+	int i, ret;
+	u32 ctrl;
+
+	if (WARN_ON(info->npwm > LPSS_MAX_PWMS))
+		return ERR_PTR(-ENODEV);
+
+	chip = devm_pwmchip_alloc(dev, info->npwm, sizeof(*lpwm));
+	if (IS_ERR(chip))
+		return chip;
+	lpwm = to_lpwm(chip);
+
+	lpwm->regs = base;
+	lpwm->info = info;
+
+	c = lpwm->info->clk_rate;
+	if (!c)
+		return ERR_PTR(-EINVAL);
+
+	chip->ops = &pwm_lpss_ops;
+
+	ret = devm_pwmchip_add(dev, chip);
+	if (ret) {
+		dev_err(dev, "failed to add PWM chip: %d\n", ret);
+		return ERR_PTR(ret);
+	}
+
+	for (i = 0; i < lpwm->info->npwm; i++) {
+		ctrl = pwm_lpss_read(&chip->pwms[i]);
+		if (ctrl & PWM_ENABLE)
+			pm_runtime_get(dev);
+	}
+
+	return chip;
+}
+#else
 struct pwm_lpss_chip *upboard_pwm_lpss_probe(struct device *dev, void __iomem *base,
 					  const struct pwm_lpss_boardinfo *info)
 {
@@ -249,8 +291,6 @@ struct pwm_lpss_chip *upboard_pwm_lpss_probe(struct device *dev, void __iomem *b
 	int i, ret;
 	u32 ctrl;
 
-	dev_info(NULL,"upboard_pwm_lpss_probe");
-	dev_info(NULL,"upboard_pwm_lpss_probe");
 	if (WARN_ON(info->npwm > LPSS_MAX_PWMS))
 		return ERR_PTR(-ENODEV);
 
@@ -291,6 +331,7 @@ struct pwm_lpss_chip *upboard_pwm_lpss_probe(struct device *dev, void __iomem *b
 
 	return lpwm;
 }
+#endif
 EXPORT_SYMBOL_GPL(upboard_pwm_lpss_probe);
 
 MODULE_DESCRIPTION("PWM driver for Intel LPSS");

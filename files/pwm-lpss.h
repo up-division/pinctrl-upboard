@@ -12,15 +12,16 @@
 
 #include <linux/device.h>
 #include <linux/pwm.h>
+#include <linux/version.h>
 
 #define MAX_PWMS			4
 #define LPSS_MAX_PWMS			MAX_PWMS
 
 
 struct pwm_lpss_chip {
-	struct pwm_chip chip;
 	void __iomem *regs;
 	const struct pwm_lpss_boardinfo *info;
+	struct pwm_chip chip;
 };
 
 struct pwm_lpss_boardinfo {
@@ -69,9 +70,11 @@ const struct pwm_lpss_boardinfo pwm_lpss_tng_info = {
 };
 //EXPORT_SYMBOL_GPL(pwm_lpss_tng_info);
 
-struct pwm_lpss_chip *pwm_lpss_probe(struct device *dev, struct resource *r,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 9, 0)
+struct pwm_chip *upboard_pwm_lpss_probe(struct device *dev, void __iomem *base,
 				     const struct pwm_lpss_boardinfo *info);
+#else
 struct pwm_lpss_chip *upboard_pwm_lpss_probe(struct device *dev, void __iomem *base,
 					  const struct pwm_lpss_boardinfo *info);
-
+#endif
 #endif	/* __PWM_LPSS_H */

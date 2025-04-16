@@ -20,6 +20,7 @@ static int pwm_lpss_probe_pci(struct pci_dev *pdev,
 {
 	const struct pwm_lpss_boardinfo *info;
 	struct pwm_lpss_chip *lpwm;
+	struct pwm_chip *chip;
 	int err;
 	
 	dev_info(&pdev->dev,"pwm_lpss_probe_pci");
@@ -33,12 +34,17 @@ static int pwm_lpss_probe_pci(struct pci_dev *pdev,
 		return err;
 
 	info = (struct pwm_lpss_boardinfo *)id->driver_data;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 9, 0)
+	chip = upboard_pwm_lpss_probe(&pdev->dev, pcim_iomap_table(pdev)[0], info);
+	if (IS_ERR(chip))
+		return PTR_ERR(chip);
+#else
 	lpwm = upboard_pwm_lpss_probe(&pdev->dev, pcim_iomap_table(pdev)[0], info);
 	if (IS_ERR(lpwm))
 		return PTR_ERR(lpwm);
 
 	pci_set_drvdata(pdev, lpwm);
-
+#endif
 	pm_runtime_put(&pdev->dev);
 	pm_runtime_allow(&pdev->dev);
 
