@@ -290,13 +290,10 @@ static int upboard_fpga_probe(struct platform_device *pdev)
 	if (IS_ERR(fpga->regmap))
 		return PTR_ERR(fpga->regmap);
 
+        //no need to blocked for non fpga board
 	ret = upboard_fpga_gpio_init(fpga);
-	if (ret)
-		return dev_err_probe(dev, ret, "Failed to initialize FPGA common GPIOs");
-
-	ret = upboard_fpga_get_firmware_version(fpga);
-	if (ret)
-		return ret;
+	if (!ret)
+	        upboard_fpga_get_firmware_version(fpga);
 
 	return devm_mfd_add_devices(dev, PLATFORM_DEVID_NONE, upboard_up_mfd_cells,
 				    ARRAY_SIZE(upboard_up_mfd_cells), NULL, 0, NULL);
