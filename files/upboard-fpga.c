@@ -45,6 +45,9 @@ static int upboard_fpga_read(void *context, unsigned int reg, unsigned int *val)
 {
 	struct upboard_fpga *fpga = context;
 	int i;
+	
+	if (IS_ERR(fpga->clear_gpio))	//for none fpga boards
+		return 0;
 
 	/* Clear to start new transaction */
 	gpiod_set_value(fpga->clear_gpio, 0);
@@ -78,6 +81,9 @@ static int upboard_fpga_write(void *context, unsigned int reg, unsigned int val)
 {
 	struct upboard_fpga *fpga = context;
 	int i;
+
+	if (IS_ERR(fpga->clear_gpio))	//for none fpga boards
+		return 0;
 
 	/* Clear to start new transcation */
 	gpiod_set_value(fpga->clear_gpio, 0);
@@ -176,7 +182,7 @@ static const struct regmap_config upboard_up2_regmap_config = {
 
 static const struct mfd_cell upboard_up_mfd_cells[] = {
 	{ .name = "upboard-pinctrl" },
-	{ .name = "upboard-leds" },
+	{ .name = "upboard-led" },
 };
 
 static const struct upboard_fpga_data upboard_up_fpga_data = {
