@@ -114,7 +114,7 @@ static int upboard_led_probe(struct platform_device *pdev)
 
 static struct platform_driver upboard_led_driver = {
 	.driver = {
-		.name = "upboard-leds",
+		.name = "upboard-led",
 	},
 	.probe = upboard_led_probe,
 };
