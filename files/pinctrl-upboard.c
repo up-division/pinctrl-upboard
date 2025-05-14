@@ -76,7 +76,7 @@ void upboard_pwm_register(int);
 #define BOARD_UPN_ASLH01    19
 #define BOARD_UPX_MTL01     21
 #define BOARD_UPX_ARL01     BOARD_UPX_MTL01
-#define BOARD_UPS_ASL01     22
+#define BOARD_UPS_ASL01     BOARD_UPN_ASLH01
 #define BOARD_UP_ASL02      BOARD_UPS_ASL01
 #define BOARD_UPN_TWL01     BOARD_UPN_ADLN01 //as same as UPN_ADLN01, 26
 #define BOARD_UP_TWL01      BOARD_UP_ADLN01 //as same as UP_ADLN01, 27
