@@ -1,3 +1,11 @@
+pinctrl-upboard (1.1.8) stretch; urgency=medium
+
+  * add support kernel 6.14+
+  * board id correct
+  * upboard-led device & platform name correct
+  * fix none fpga/cpld board  
+  
+ -- Gary Wang <garywang@aaeon.com.tw>  Wed, 30 Jul 2025 12:40:33 +0100
 pinctrl-upboard (1.1.7) stretch; urgency=medium
 
   * add support UPS-ASL01,UP-ASL02,UPN-TWL01,UP-TWL01,UP-TWL02,UPS-TWL01,UPN-TWLH01
