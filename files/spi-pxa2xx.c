@@ -1208,7 +1208,11 @@ static int pxa2xx_spi_transfer_one(struct spi_controller *controller,
 		}
 	}
 
+#if TYPES_IS_SLAVE==1
 	if (spi_controller_is_slave(controller)) {
+#else
+	if (spi_controller_is_target(controller)) {
+#endif
 		while (drv_data->write(drv_data))
 			;
 		if (drv_data->gpiod_ready) {
@@ -1310,7 +1314,11 @@ static int setup(struct spi_device *spi)
 		break;
 	default:
 		tx_hi_thres = 0;
+#if TYPES_IS_SLAVE==1		
 		if (spi_controller_is_slave(drv_data->controller)) {
+#else
+		if (spi_controller_is_target(drv_data->controller)) {
+#endif
 			tx_thres = 1;
 			rx_thres = 2;
 		} else {
@@ -1359,7 +1367,11 @@ static int setup(struct spi_device *spi)
 	}
 
 	chip->cr1 = 0;
+#if TYPES_IS_SLAVE==1		
 	if (spi_controller_is_slave(drv_data->controller)) {
+#else
+	if (spi_controller_is_target(drv_data->controller)) {
+#endif
 		chip->cr1 |= SSCR1_SCFR;
 		chip->cr1 |= SSCR1_SCLKDIR;
 		chip->cr1 |= SSCR1_SFRMDIR;
@@ -1667,30 +1679,6 @@ pxa2xx_spi_init_pdata(struct platform_device *pdev)
 static int pxa2xx_spi_fw_translate_cs(struct spi_controller *controller,
 				      unsigned int cs)
 {
-#if 0
-	struct driver_data *drv_data = spi_controller_get_devdata(controller);
-#ifndef __LINUX_PXA2XX_SSP_H
-	if (has_acpi_companion(drv_data->dev)) {
-#else
-	if (has_acpi_companion(drv_data->ssp->dev)) {
-#endif
-		switch (drv_data->ssp_type) {
-		/*
-		 * For Atoms the ACPI DeviceSelection used by the Windows
-		 * driver starts from 1 instead of 0 so translate it here
-		 * to match what Linux expects.
-		 */
-		case LPSS_BYT_SSP:
-		case LPSS_BSW_SSP:
-			return cs - 1;
-
-		default:
-			break;
-		}
-	}
-
-	return cs;
-#else
 	struct driver_data *drv_data = spi_controller_get_devdata(controller);
 
 	switch (drv_data->ssp_type) {
@@ -1706,7 +1694,6 @@ static int pxa2xx_spi_fw_translate_cs(struct spi_controller *controller,
 	default:
 		return cs;
 	}
-#endif
 }
 
 static size_t pxa2xx_spi_max_dma_transfer_size(struct spi_device *spi)
@@ -1750,9 +1737,9 @@ static int pxa2xx_spi_probe(struct platform_device *pdev)
 		controller = spi_alloc_master(dev, sizeof(*drv_data));
 #else
 	if (platform_info->is_target)
-		controller = devm_spi_alloc_slave(dev, sizeof(*drv_data));
+		controller = devm_spi_alloc_target(dev, sizeof(*drv_data));
 	else
-		controller = devm_spi_alloc_master(dev, sizeof(*drv_data));
+		controller = devm_spi_alloc_host(dev, sizeof(*drv_data));
 
 #endif
 
@@ -1874,8 +1861,11 @@ static int pxa2xx_spi_probe(struct platform_device *pdev)
 		pxa2xx_spi_write(drv_data, SSCR0, tmp);
 		break;
 	default:
-
+#if TYPES_IS_SLAVE==1
 		if (spi_controller_is_slave(controller)) {
+#else
+		if (spi_controller_is_target(controller)) {
+#endif
 			tmp = SSCR1_SCFR |
 			      SSCR1_SCLKDIR |
 			      SSCR1_SFRMDIR |
@@ -1888,7 +1878,11 @@ static int pxa2xx_spi_probe(struct platform_device *pdev)
 		}
 		pxa2xx_spi_write(drv_data, SSCR1, tmp);
 		tmp = SSCR0_Motorola | SSCR0_DataSize(8);
+#if TYPES_IS_SLAVE==1
 		if (!spi_controller_is_slave(controller))
+#else
+		if (!spi_controller_is_target(controller))
+#endif
 			tmp |= SSCR0_SCR(2);
 		pxa2xx_spi_write(drv_data, SSCR0, tmp);
 		break;

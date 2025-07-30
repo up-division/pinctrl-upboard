@@ -50,7 +50,7 @@ void foo(void)
 #endif //CHECK_SPI_NAMING
 
 #ifdef CHECK_SPI_SSP
-#include "pxa2xx_spi.h"
+#include <linux/pxa2xx_ssp.h>
 void foo(void)
 {
 	struct ssp_device ssp;

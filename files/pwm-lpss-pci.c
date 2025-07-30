@@ -114,4 +114,8 @@ module_pci_driver(pwm_lpss_driver_pci);
 
 MODULE_DESCRIPTION("PWM PCI driver for Intel LPSS");
 MODULE_LICENSE("GPL v2");
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 MODULE_IMPORT_NS(PWM_LPSS);
+#else
+MODULE_IMPORT_NS("PWM_LPSS");
+#endif
