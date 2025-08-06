@@ -1138,22 +1138,16 @@ static void __iomem *upboard_get_regs(struct gpio_chip *gc, unsigned int gpio, u
 	void __iomem *base=NULL;
 	int pin=gpio-gc->base;
 	
-	//out of tree build need to check intel_pinctrl struct
+	//out of tree build need to check intel_pinctrl_n struct
 	struct intel_pinctrl_n *pctrlN = gpiochip_get_data(gc);
-	int ncommunities=pctrl->ncommunities==0?pctrlN->ncommunities:pctrl->ncommunities;
-	
+	int ncommunities=pctrlN->ncommunities==0?pctrl->ncommunities:pctrlN->ncommunities;
+			
 	//check Intel pin controller for all platform
 	int i,j;
 	pin = -1;
 	for (i = 0; i < ncommunities; i++) {
-		struct intel_community *community;
-		
-		//out of tree only
-		if(pctrl->ncommunities)
-		  community = &pctrl->communities[i];
-		else
-		  community = &pctrlN->communities[i];
-		  
+		struct intel_community *community=pctrlN->ncommunities==0?(&pctrl->communities[i]):(&pctrlN->communities[i]);
+
 		for(j=0;j<community->ngpps;j++)
 		{
 			struct intel_padgroup gpps = community->gpps[j];
@@ -1657,7 +1651,7 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 	upboard_alt_func_enable(&pctrl->chip,"PWM",pctrl->ident);
 	upboard_alt_func_enable(&pctrl->chip,"ADC",pctrl->ident);
 	upboard_alt_func_enable(&pctrl->chip,"PINMUX",pctrl->ident); //up2 i2c pinmux
-	
+
 	//pwm controller
 	switch(pctrl->ident)
 	{
