@@ -23,7 +23,8 @@ spi-pxa2xx-up-objs := spi-pxa2xx.o spi-pxa2xx-dma.o
 obj-m += spi-pxa2xx-up.o
 obj-y += protos.o
 
-KVERSION := $(shell uname -r)
+# Get the currently booted kernel version if 'KVERSION' was not set inside the make environment
+KVERSION ?= $(shell uname -r)
 KERNEL_SRC := /lib/modules/$(KVERSION)/build
 
 all: check_protos
