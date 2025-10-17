@@ -199,11 +199,12 @@ static int upboard_ec_gpio_get(struct gpio_chip *gc, unsigned int offset)
 	return val;
 }
 
-static void upboard_ec_gpio_set(struct gpio_chip *gc, unsigned int offset, int value)
+static int upboard_ec_gpio_set(struct gpio_chip *gc, unsigned int offset, int value)
 {
 	struct upelement_pinctrl *pctrl = container_of(gc, struct upelement_pinctrl, chip); 
 	struct upelement_pin pin = pctrl->pins[offset];
 	regmap_field_write(pin.valbit, value);
+        return 0;
 }
 
 static int upboard_ec_gpio_direction_input(struct gpio_chip *gc, unsigned int offset)

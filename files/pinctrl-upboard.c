@@ -1053,7 +1053,7 @@ static int upboard_gpio_get(struct gpio_chip *gc, unsigned int offset)
 	return !!(reg_val & PADCFG0_GPIORXSTATE);
 }
 
-static void upboard_gpio_set(struct gpio_chip *gc, unsigned int offset, int
+static int upboard_gpio_set(struct gpio_chip *gc, unsigned int offset, int
 			     value)
 {
 	struct upboard_pinctrl *pctrl = container_of(gc, struct upboard_pinctrl, chip);
@@ -1062,7 +1062,7 @@ static void upboard_gpio_set(struct gpio_chip *gc, unsigned int offset, int
 	int reg_val=readl(pctrl->pins[pin].regs);
 
 	if (gpio < 0)
-		return;
+		return 0;
 
 	//APL03 board open drain GPIO
 	if(pctrl->ident == BOARD_UP_APL03) {
@@ -1077,7 +1077,7 @@ static void upboard_gpio_set(struct gpio_chip *gc, unsigned int offset, int
 			else
 				reg_val &= ~PADCFG0_GPIOTXDIS;
 			writel(reg_val,pctrl->pins[pin].regs);	
-			return;
+			return 0;
 			default:		
 			break;
 		
@@ -1088,6 +1088,7 @@ static void upboard_gpio_set(struct gpio_chip *gc, unsigned int offset, int
 	else
 		reg_val &= ~PADCFG0_GPIOTXSTATE;
 	writel(reg_val, pctrl->pins[pin].regs);
+        return 0;
 }
 
 static int upboard_gpio_direction_input(struct gpio_chip *gc,
