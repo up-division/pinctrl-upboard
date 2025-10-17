@@ -24,6 +24,7 @@
 #include <linux/regmap.h>
 #include <linux/interrupt.h>
 #include <linux/string.h>
+#include <linux/version.h>
 
 #include "upboard-ec.h"
 
@@ -199,11 +200,18 @@ static int upboard_ec_gpio_get(struct gpio_chip *gc, unsigned int offset)
 	return val;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
+static int upboard_ec_gpio_set(struct gpio_chip *gc, unsigned int offset, int value)
+#else
 static void upboard_ec_gpio_set(struct gpio_chip *gc, unsigned int offset, int value)
+#endif
 {
 	struct upelement_pinctrl *pctrl = container_of(gc, struct upelement_pinctrl, chip); 
 	struct upelement_pin pin = pctrl->pins[offset];
 	regmap_field_write(pin.valbit, value);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
+    return 0;
+#endif
 }
 
 static int upboard_ec_gpio_direction_input(struct gpio_chip *gc, unsigned int offset)
