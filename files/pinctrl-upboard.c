@@ -1675,7 +1675,7 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 		break;
 		case BOARD_UPX_MTL01:
 			upboard_pwm_register(1);
-		break;	
+		//break;	
 		default:
                 //set cs pin
                 cs_pins[0].cs = &pctrl->pins[21];
