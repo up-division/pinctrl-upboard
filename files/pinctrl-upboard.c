@@ -1652,12 +1652,11 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 	upboard_alt_func_enable(&pctrl->chip,"ADC",pctrl->ident);
 	upboard_alt_func_enable(&pctrl->chip,"PINMUX",pctrl->ident); //up2 i2c pinmux
 
-	//pwm controller
+	//pwm & cs pins setting
 	switch(pctrl->ident)
 	{
 	        case BOARD_UP_APL01:
 	        case BOARD_UPN_APL:
-                //set cs pin
                 cs_pins[0].cs = &pctrl->pins[18];
                 cs_pins[0].val = readl(pctrl->pins[18].regs);  
                 cs_pins[1].cs = &pctrl->pins[17];
@@ -1671,17 +1670,17 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 		case BOARD_UPN_ADLN01:
 		case BOARD_UP_ADLN01:
 		case BOARD_UPN_ASLH01:
-			upboard_pwm_register(0);
-		break;
 		case BOARD_UPX_MTL01:
-			upboard_pwm_register(1);
-		//break;	
-		default:
-                //set cs pin
                 cs_pins[0].cs = &pctrl->pins[21];
                 cs_pins[0].val = readl(pctrl->pins[21].regs);  
                 cs_pins[1].cs = &pctrl->pins[22];
                 cs_pins[1].val = readl(pctrl->pins[22].regs);
+                
+                //pwm resource
+                if(pctrl->ident==BOARD_UPX_MTL01)
+	          upboard_pwm_register(1);
+	        else
+	          upboard_pwm_register(0);
                 break;		
 	}			
 
