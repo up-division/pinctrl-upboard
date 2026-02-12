@@ -18,6 +18,7 @@
 #include <linux/regmap.h>
 #include <linux/seq_file.h>
 #include <linux/string.h>
+#include <linux/version.h>
 
 #include <linux/pinctrl/consumer.h>
 #include <linux/pinctrl/pinctrl.h>
@@ -1053,8 +1054,13 @@ static int upboard_gpio_get(struct gpio_chip *gc, unsigned int offset)
 	return !!(reg_val & PADCFG0_GPIORXSTATE);
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
+static int upboard_gpio_set(struct gpio_chip *gc, unsigned int offset, int
+			     value)
+#else
 static void upboard_gpio_set(struct gpio_chip *gc, unsigned int offset, int
 			     value)
+#endif
 {
 	struct upboard_pinctrl *pctrl = container_of(gc, struct upboard_pinctrl, chip);
 	unsigned int pin = pctrl->rpi_mapping[offset];
@@ -1062,7 +1068,11 @@ static void upboard_gpio_set(struct gpio_chip *gc, unsigned int offset, int
 	int reg_val=readl(pctrl->pins[pin].regs);
 
 	if (gpio < 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
+		return 0;
+#else
 		return;
+#endif
 
 	//APL03 board open drain GPIO
 	if(pctrl->ident == BOARD_UP_APL03) {
@@ -1077,7 +1087,11 @@ static void upboard_gpio_set(struct gpio_chip *gc, unsigned int offset, int
 			else
 				reg_val &= ~PADCFG0_GPIOTXDIS;
 			writel(reg_val,pctrl->pins[pin].regs);	
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
+			return 0;
+#else
 			return;
+#endif
 			default:		
 			break;
 		
@@ -1088,6 +1102,9 @@ static void upboard_gpio_set(struct gpio_chip *gc, unsigned int offset, int
 	else
 		reg_val &= ~PADCFG0_GPIOTXSTATE;
 	writel(reg_val, pctrl->pins[pin].regs);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0)
+	return 0;
+#endif
 }
 
 static int upboard_gpio_direction_input(struct gpio_chip *gc,
