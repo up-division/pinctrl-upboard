@@ -76,6 +76,7 @@ void upboard_pwm_register(int);
 #define BOARD_UP_ADLN01     18
 #define BOARD_UPN_ASLH01    19
 #define BOARD_UPX_MTL01     21
+#define BOARD_UPV_PTL01     26
 #define BOARD_UPX_ARL01     BOARD_UPX_MTL01
 #define BOARD_UPS_ASL01     BOARD_UPN_ASLH01
 #define BOARD_UP_ASL02      BOARD_UPS_ASL01
@@ -884,6 +885,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 					}
 				break;
 				case BOARD_UPX_MTL01:
+				case BOARD_UPV_PTL01:
 					mode=5;
 				break;
 			}
@@ -921,6 +923,7 @@ static void upboard_alt_func_enable(struct gpio_chip *gc, const char* name, int 
 				case BOARD_UP_ADLN01:
 				case BOARD_UPN_ASLH01:
 				case BOARD_UPX_MTL01:
+				case BOARD_UPV_PTL01:
 					mode=2;
 				break;	
 				default:
@@ -1384,6 +1387,20 @@ static const struct dmi_system_id upboard_dmi_table[] = {
 		},
 	},	
 	{
+		.ident = STR_ID(BOARD_UPV_PTL01),
+		.matches = {
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPV-PTL01"),
+		},
+	},	
+	{
+		.ident = STR_ID(BOARD_UPV_PTL01),
+		.matches = {
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
+			DMI_EXACT_MATCH(DMI_BOARD_NAME, "UPX-PTL01"),
+		},
+	},	
+	{
 		.ident = STR_ID(BOARD_UPS_ASL01),
 		.matches = {
 			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "AAEON"),
@@ -1688,13 +1705,14 @@ static int upboard_pinctrl_probe(struct platform_device *pdev)
 		case BOARD_UP_ADLN01:
 		case BOARD_UPN_ASLH01:
 		case BOARD_UPX_MTL01:
+		case BOARD_UPV_PTL01:
                 cs_pins[0].cs = &pctrl->pins[21];
                 cs_pins[0].val = readl(pctrl->pins[21].regs);  
                 cs_pins[1].cs = &pctrl->pins[22];
                 cs_pins[1].val = readl(pctrl->pins[22].regs);
                 
                 //pwm resource
-                if(pctrl->ident==BOARD_UPX_MTL01)
+                if(pctrl->ident==BOARD_UPX_MTL01 || pctrl->ident==BOARD_UPV_PTL01)
 	          upboard_pwm_register(1);
 	        else
 	          upboard_pwm_register(0);
