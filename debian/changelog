@@ -1,3 +1,9 @@
+pinctrl-upboard (1.1.9) stretch; urgency=medium
+
+  * add support kernel 6.17+
+  * add support UPX-PTL01  
+
+ -- Gary Wang <garywang@aaeon.com.tw>  Tue, 10 Mar 2026 17:39:45+0100  
 pinctrl-upboard (1.1.8) stretch; urgency=medium
 
   * add support kernel 6.14+
