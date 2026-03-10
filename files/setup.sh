@@ -6,7 +6,7 @@ echo $SRC_DIR
 echo "UP_BOARD=$(cat /sys/class/dmi/id/board_name)"
 
 #force enable ADC & SPI declare in ACPI
-mkdir -p /lib/firmware/acpi-upgrades
+mkdir -p $BASEHOOKSDIR
 cp $SRC_DIR/acpi/acpi-upgrades /etc/initramfs-tools/hooks/
 cp $SRC_DIR/acpi/adc/*.aml $BASEHOOKSDIR
 cp $SRC_DIR/acpi/spi/*.aml $BASEHOOKSDIR
