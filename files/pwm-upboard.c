@@ -49,6 +49,26 @@ static struct resource pwm_res1[] = {
 	},
 };
 
+//UP PTL
+static struct resource pwm_res2[] = {
+	{
+	.name = "upboard-pwmctrl",
+	.start = 0x40005D0434,
+	.end = 0x40005D0444,
+	.flags = IORESOURCE_MEM | IORESOURCE_MEM_WRITEABLE,
+	},
+};
+
+//UP WCL
+static struct resource pwm_res3[] = {
+	{
+	.name = "upboard-pwmctrl",
+	.start = 0x40005D0430,
+	.end = 0x40005D0440,
+	.flags = IORESOURCE_MEM | IORESOURCE_MEM_WRITEABLE,
+	},
+};
+
 static struct pwm_lpss_boardinfo up_pwm_info = {
 	.clk_rate = 32768,
 	.npwm = 1,
@@ -57,7 +77,11 @@ static struct pwm_lpss_boardinfo up_pwm_info = {
 
 static inline struct pwm_lpss_chip *to_lpwm(struct pwm_chip *chip)
 {
+        #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 9, 0)
+        return pwmchip_get_drvdata(chip);
+        #else
 	return container_of(chip, struct pwm_lpss_chip, chip);
+	#endif
 }
 
 static inline u32 upboard_pwm_read(const struct pwm_device *pwm)
@@ -275,7 +299,7 @@ void upboard_pwm_register(int res)
 		platform_device_unregister(up_pwm);	
 		return;
 	}			
-	if(IS_ERR(upboard_pwm_probe(&up_pwm->dev,res==0?pwm_res:pwm_res1,&up_pwm_info))) {
+	if(IS_ERR(upboard_pwm_probe(&up_pwm->dev,res==0?pwm_res:(res==1?pwm_res1:(res==2?pwm_res2:pwm_res3)),&up_pwm_info))) {
 		platform_device_unregister(up_pwm);
 		return;				
 	}

@@ -1,9 +1,16 @@
+pinctrl-upboard (1.2.0) stretch; urgency=medium
+
+  * add support UPX-WCL01
+  * fix pwm issue in UPX-PTL01  
+
+ -- Louis Chen <louischen@aaeon.com.tw>  Mon, 10 Aug 2026 10:53:40 +0800
+
 pinctrl-upboard (1.1.9) stretch; urgency=medium
 
   * add support kernel 6.17+
   * add support UPX-PTL01  
 
- -- Gary Wang <garywang@aaeon.com.tw>  Tue, 10 Mar 2026 17:39:45+0100  
+ -- Gary Wang <garywang@aaeon.com.tw>  Tue, 10 Mar 2026 17:39:45 +0100
 pinctrl-upboard (1.1.8) stretch; urgency=medium
 
   * add support kernel 6.14+
@@ -72,7 +79,7 @@ pinctrl-upboard (1.1.0) stretch; urgency=medium
   * fix kernel 5.4- build issue 
   * fix pwm issue in UP-ADLN01
   
- -- Gary Wang <garywang@aaeon.com.tw>  Fri, 60 Jun 2023 10:32:10 +0100
+ -- Gary Wang <garywang@aaeon.com.tw>  Fri, 30 Jun 2023 10:32:10 +0100
 pinctrl-upboard (1.0.8) stretch; urgency=medium
 
   * add prototype check mechanism 
